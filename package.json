@@ -1,0 +1,28 @@
+{
+  "name": "@fragmetric-labs/snapshot",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node --transpile-only ./src/index.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@orca-so/whirlpools": "^1.0.3",
+    "@solana-program/token": "^0.4.1",
+    "@solana/web3.js": "^1.98.0",
+    "@solana/web3.js-2": "npm:@solana/web3.js@^2.0.0",
+    "commander": "^13.1.0",
+    "winston": "^3.17.0"
+  },
+  "resolutions": {
+    "@orca-so/whirlpools/@solana/web3.js": "npm:@solana/web3.js@^2.0.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
