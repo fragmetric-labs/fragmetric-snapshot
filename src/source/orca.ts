@@ -1,11 +1,11 @@
-import web3 from '@solana/web3.js';
+import web3 from '@solana/web3.js-1';
 import * as orca from "@orca-so/whirlpools";
 import {SourceStreamOptions} from "./index";
 import {RPCClient} from "../rpc";
 import {logger} from "../logger";
 import {TokenBalanceSnapshot} from "./snapshot";
 
-// args: pool address, wrapped token mint, other token mint
+// args: pool address, wrapped token mint, other token mint, [whirlpool config]
 export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
     const rpc = new RPCClient(opts.rpc); // opts.rpc
 
@@ -14,8 +14,7 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
     const tokenMintB = new web3.PublicKey(opts.args[2]);
     const baseTokenMint = tokenMintA.toString(); // we should determine which token would be base token at the pool
 
-
-    await orca.setWhirlpoolsConfig(rpc.cluster == 'mainnet' ? 'solanaMainnet' : 'solanaDevnet');
+    await orca.setWhirlpoolsConfig(opts.args[3] as any ?? (rpc.cluster == 'mainnet' ? 'solanaMainnet' : 'solanaDevnet'));
     const poolInfo = (await orca.fetchWhirlpoolsByTokenPair(rpc.v2, tokenMintA.toString() as any, tokenMintB.toString() as any))
         .filter(poolInfo => poolInfo.address == pool.toString())[0];
     if (!poolInfo) {

@@ -1,29 +1,50 @@
 {
   "name": "@fragmetric-labs/snapshot",
-  "version": "1.0.2",
+  "version": "1.0.20",
   "main": "dist/index.js",
+  "bin": {
+    "fragmetric-snapshot": "index.js"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fragmetric-labs/fragmetric-snapshot"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf ./dist && tsc",
     "dev": "ts-node --transpile-only ./src/index.ts"
   },
   "files": [
     "dist",
-    "bin"
+    "index.js"
   ],
-  "bin": {
-    "fragmetric-snapshot": "bin/index.js"
-  },
   "dependencies": {
     "@orca-so/whirlpools": "^1.0.3",
     "@solana-program/token": "^0.4.1",
-    "@solana/web3.js": "^1.98.0",
+    "@solana/web3.js-1": "npm:@solana/web3.js@^1.98.0",
     "@solana/web3.js-2": "npm:@solana/web3.js@^2.0.0",
     "commander": "^13.1.0",
     "winston": "^3.17.0"
   },
-  "resolutions": {
-    "@orca-so/whirlpools/@solana/web3.js": "npm:@solana/web3.js@^2.0.0"
+  "overrides": {
+    "@orca-so/whirlpools": {
+      "@solana/web3.js": "^2.0.0"
+    },
+    "@orca-so/whirlpools-client": {
+      "@solana/web3.js": "^2.0.0"
+    },
+    "@solana-program/token": {
+      "@solana/web3.js": "^2.0.0"
+    },
+    "@solana-program/memo": {
+      "@solana/web3.js": "^2.0.0"
+    },
+    "@solana-program/system": {
+      "@solana/web3.js": "^2.0.0"
+    },
+    "@solana-program/token-2022": {
+      "@solana/web3.js": "^2.0.0"
+    }
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

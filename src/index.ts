@@ -6,13 +6,14 @@ import {createOutputStream} from "./output";
 program
     .name("fragmetric-snapshot")
     .description("CLI to take arbitrary onchain snapshots for Fragmetric platform")
+    .version(require('../package.json').version as string)
     .option("-s, --silent", "Turn off stdout logging")
-    .option("--rpc <url>", "Solana RPC URL")
-    .option("--output <path>", "Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock, ...")
+    .option("-r, --rpc <url>", "Solana RPC URL")
+    .option("-o, --output <path>", "Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock, ...")
     .argument("source [source-args]", "orca-liquidity pool tokenA tokenB, ...")
-    .allowExcessArguments(true);
-
-program.parse();
+    .allowExcessArguments(true)
+    .showHelpAfterError()
+    .parse();
 
 export type ProgramOptions = {
     rpc: string;
@@ -30,8 +31,7 @@ const options: ProgramOptions  = {
 };
 logger.level = !!rawOptions.silent ? "error" : "debug";
 
-
-logger.info("creating a snapshot stream", { options });
+logger.info("creating a snapshot stream", { options, version: program.version() });
 Promise.all([
     createOutputStream({
         path: options.output,
