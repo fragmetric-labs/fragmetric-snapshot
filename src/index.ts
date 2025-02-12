@@ -1,17 +1,15 @@
 import {program} from "commander";
 import {logger} from "./logger";
-import * as path from "node:path";
 import {createSourceStream} from "./source";
 import {createOutputStream} from "./output";
 
 program
     .name("fragmetric-snapshot")
     .description("CLI to take arbitrary onchain snapshots for Fragmetric platform")
-    .version("1.0.0")
     .option("-s, --silent", "Turn off stdout logging")
     .option("--rpc <url>", "Solana RPC URL")
     .option("--output <path>", "Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock, ...")
-    .argument("<source> [source-args]", "orca-liquidity pool tokenA tokenB, ...")
+    .argument("source [source-args]", "orca-liquidity pool tokenA tokenB, ...")
     .allowExcessArguments(true);
 
 program.parse();
