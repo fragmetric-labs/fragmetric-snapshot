@@ -1,4 +1,4 @@
 export type TokenBalanceSnapshot = {
-    owner: string;
+    owner: string | null;
     baseTokenBalance: number;
 }

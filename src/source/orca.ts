@@ -54,6 +54,8 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
             const snapshot: TokenBalanceSnapshot = {
                 owner: positionTokenAccount,
                 baseTokenBalance: (function() {
+                    if (!positionTokenAccount) return 0;
+
                     if (poolTokenA == baseTokenMint) {
                         if (positionTokenAmountA > 0) {
                             return positionTokenAmountA + positionTokenAmountB / currentPrice;
