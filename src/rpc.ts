@@ -25,6 +25,9 @@ export class RPCClient {
             res = await rpcCall(this.endpoint, mintAddress); // recall rpc after sleep
             rpcMaxRetryCount--; // countdown rpcMaxRetry
         }
+        if (rpcMaxRetryCount == 0 && res.status === 429) {
+            throw new Error("Rpc rate limit error doesn't get improved. Try it later");
+        }
 
         const data = await res.json();
         for (const tokenAccount of data.result.token_accounts) {
