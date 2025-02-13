@@ -54,6 +54,7 @@ class JSONReadableStream extends Readable {
             } catch (err) {
                 this.destroy(err as Error);
             } finally {
+                this.push(null);
                 resolve(true);
             }
         });
