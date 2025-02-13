@@ -1,5 +1,6 @@
 import { Readable } from 'stream';
 import {produceOrcaLiquidity} from "./orca";
+import { produceKaminoLiquidity } from './kamino';
 
 export type CreateSourceStreamOptions = {
     rpc: string;
@@ -40,6 +41,9 @@ class JSONReadableStream extends Readable {
                 switch (options.source) {
                     case 'orca-liquidity':
                         await produceOrcaLiquidity(options);
+                        break;
+                    case 'kamino-liquidity':
+                        await produceKaminoLiquidity(options);
                         break;
                     case 'test':
                         this.intervalId = setInterval(() => {
