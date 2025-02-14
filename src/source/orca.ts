@@ -28,44 +28,49 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
 
     // now initialization phase finished, begin streaming
     process.nextTick(async () => {
-        for (const pos of positionsInfo) {
-            const lowerPrice = 1.0001 ** pos.data.tickLowerIndex;
-            const upperPrice = 1.0001 ** pos.data.tickUpperIndex;
-            const positionTokenAmountA = Number(pos.data.liquidity) * (function () {
-                if (currentPrice < lowerPrice) {
-                    return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
-                } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
-                    return 1 / Math.sqrt(currentPrice) - 1 / Math.sqrt(upperPrice);
-                } else { // currentPrice > upperPrice
-                    return 0;
-                }
-            })();
-            const positionTokenAmountB = Number(pos.data.liquidity) * (function() {
-                if (currentPrice < lowerPrice) {
-                    return 0;
-                } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
-                    return Math.sqrt(currentPrice) - Math.sqrt(lowerPrice);
-                } else { // currentPrice > upperPrice
-                    return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
-                }
-            })();
-            const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
-            const snapshot: Snapshot = {
-                owner: positionTokenAccount,
-                baseTokenBalance: (function() {
-                    if (poolTokenA == baseTokenMint) {
-                        if (positionTokenAmountA > 0) {
-                            return positionTokenAmountA + positionTokenAmountB / currentPrice;
-                        }
-                    } else if (poolTokenB == baseTokenMint) {
-                        if (positionTokenAmountB > 0) {
-                            return currentPrice * positionTokenAmountA + positionTokenAmountB;
-                        }
+        try {
+            for (const pos of positionsInfo) {
+                const lowerPrice = 1.0001 ** pos.data.tickLowerIndex;
+                const upperPrice = 1.0001 ** pos.data.tickUpperIndex;
+                const positionTokenAmountA = Number(pos.data.liquidity) * (function () {
+                    if (currentPrice < lowerPrice) {
+                        return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
+                    } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
+                        return 1 / Math.sqrt(currentPrice) - 1 / Math.sqrt(upperPrice);
+                    } else { // currentPrice > upperPrice
+                        return 0;
                     }
-                    return 0;
-                })(),
-            };
-            opts.produceSnapshot(snapshot);
+                })();
+                const positionTokenAmountB = Number(pos.data.liquidity) * (function() {
+                    if (currentPrice < lowerPrice) {
+                        return 0;
+                    } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
+                        return Math.sqrt(currentPrice) - Math.sqrt(lowerPrice);
+                    } else { // currentPrice > upperPrice
+                        return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
+                    }
+                })();
+                const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
+                const snapshot: Snapshot = {
+                    owner: positionTokenAccount,
+                    baseTokenBalance: (function() {
+                        if (poolTokenA == baseTokenMint) {
+                            if (positionTokenAmountA > 0) {
+                                return positionTokenAmountA + positionTokenAmountB / currentPrice;
+                            }
+                        } else if (poolTokenB == baseTokenMint) {
+                            if (positionTokenAmountB > 0) {
+                                return currentPrice * positionTokenAmountA + positionTokenAmountB;
+                            }
+                        }
+                        return 0;
+                    })(),
+                };
+                opts.produceSnapshot(snapshot);
+            }
+        } catch (err) {
+            opts.close(err as Error);
+            return;
         }
         opts.close();
     });

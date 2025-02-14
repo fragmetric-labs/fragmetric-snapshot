@@ -37,46 +37,51 @@ export async function produceKaminoLiquidity(opts: SourceStreamOptions) {
     const validHolders = holders.filter(holder => holder.amount.greaterThan(0));
 
     process.nextTick(() => {
-        for (const holder of validHolders) {
-            const holderShareRate = holder.amount.div(Number(strategySharesMintSupply.amount) / 10**strategySharesMintSupply.decimals);
+        try {
+            for (const holder of validHolders) {
+                const holderShareRate = holder.amount.div(Number(strategySharesMintSupply.amount) / 10**strategySharesMintSupply.decimals);
 
-            const tokenAAmount = Number(kaminoPosition.liquidity) * holderShareRate.toNumber() * (function() {
-                if (poolPrice.toNumber() < lowerPrice) {
-                    return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
-                } else if (lowerPrice <= poolPrice.toNumber() && poolPrice.toNumber() <= upperPrice) {
-                    return 1 / Math.sqrt(poolPrice.toNumber()) - 1 / Math.sqrt(upperPrice);
-                } else {
-                    return 0;
-                }
-            })();
-            const tokenBAmount = Number(kaminoPosition.liquidity) * holderShareRate.toNumber() * (function() {
-                if (poolPrice.toNumber() < lowerPrice) {
-                    return 0;
-                } else if (lowerPrice <= poolPrice.toNumber() && poolPrice.toNumber() <= upperPrice) {
-                    return Math.sqrt(poolPrice.toNumber()) - Math.sqrt(lowerPrice);
-                } else {
-                    return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
-                }
-            })();
-
-            const snapshot: Snapshot = {
-                owner: holder.holderPubkey.toString(),
-                // positionOwner: strategyInfo.baseVaultAuthority, // this maps to orca snapshot's owner, so you can filter the kamino liquidity provider at orca pool
-                baseTokenBalance: (function() {
-                    if (poolTokenA == baseTokenMint) {
-                        if (tokenAAmount > 0) {
-                            return tokenAAmount + tokenBAmount / poolPrice.toNumber();
-                        }
-                    } else if (poolTokenB == baseTokenMint) {
-                        if (tokenBAmount > 0) {
-                            return poolPrice.toNumber() * tokenAAmount + tokenBAmount;
-                        }
+                const tokenAAmount = Number(kaminoPosition.liquidity) * holderShareRate.toNumber() * (function() {
+                    if (poolPrice.toNumber() < lowerPrice) {
+                        return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
+                    } else if (lowerPrice <= poolPrice.toNumber() && poolPrice.toNumber() <= upperPrice) {
+                        return 1 / Math.sqrt(poolPrice.toNumber()) - 1 / Math.sqrt(upperPrice);
+                    } else {
+                        return 0;
                     }
-                    return 0;
-                })(),
-            };
+                })();
+                const tokenBAmount = Number(kaminoPosition.liquidity) * holderShareRate.toNumber() * (function() {
+                    if (poolPrice.toNumber() < lowerPrice) {
+                        return 0;
+                    } else if (lowerPrice <= poolPrice.toNumber() && poolPrice.toNumber() <= upperPrice) {
+                        return Math.sqrt(poolPrice.toNumber()) - Math.sqrt(lowerPrice);
+                    } else {
+                        return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
+                    }
+                })();
 
-            opts.produceSnapshot(snapshot);
+                const snapshot: Snapshot = {
+                    owner: holder.holderPubkey.toString(),
+                    // positionOwner: strategyInfo.baseVaultAuthority, // this maps to orca snapshot's owner, so you can filter the kamino liquidity provider at orca pool
+                    baseTokenBalance: (function() {
+                        if (poolTokenA == baseTokenMint) {
+                            if (tokenAAmount > 0) {
+                                return tokenAAmount + tokenBAmount / poolPrice.toNumber();
+                            }
+                        } else if (poolTokenB == baseTokenMint) {
+                            if (tokenBAmount > 0) {
+                                return poolPrice.toNumber() * tokenAAmount + tokenBAmount;
+                            }
+                        }
+                        return 0;
+                    })(),
+                };
+
+                opts.produceSnapshot(snapshot);
+            }
+        } catch (error) {
+            opts.close(error as Error);
+            return;
         }
         opts.close();
     });

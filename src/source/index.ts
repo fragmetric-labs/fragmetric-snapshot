@@ -15,7 +15,7 @@ export type CreateSourceStreamOptions = {
 
 export type SourceStreamOptions = CreateSourceStreamOptions & {
     produceSnapshot: (snapshot: Snapshot) => void;
-    close: () => void;
+    close: (error?: Error) => void;
 }
 
 export function createSourceStream(opts: CreateSourceStreamOptions): Promise<Readable> {
@@ -40,8 +40,8 @@ class JSONReadableStream extends Readable {
             produceSnapshot: (snapshot) => {
                 this.push(JSON.stringify(snapshot) + "\n");
             },
-            close: () => {
-                this.destroy();
+            close: (err) => {
+                this.destroy(err);
             },
         }
 
