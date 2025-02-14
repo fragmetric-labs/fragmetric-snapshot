@@ -58,11 +58,11 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
                     baseTokenBalance: (function() {
                         if (poolTokenA == baseTokenMint) {
                             if (positionTokenAmountA > 0) {
-                                return positionTokenAmountA + positionTokenAmountB / currentPrice;
+                                return Math.round(positionTokenAmountA + positionTokenAmountB / currentPrice);
                             }
                         } else if (poolTokenB == baseTokenMint) {
                             if (positionTokenAmountB > 0) {
-                                return currentPrice * positionTokenAmountA + positionTokenAmountB;
+                                return Math.round(currentPrice * positionTokenAmountA + positionTokenAmountB);
                             }
                         }
                         return 0;

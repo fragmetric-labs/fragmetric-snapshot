@@ -66,11 +66,11 @@ export async function produceKaminoLiquidity(opts: SourceStreamOptions) {
                     baseTokenBalance: (function() {
                         if (poolTokenA == baseTokenMint) {
                             if (tokenAAmount > 0) {
-                                return tokenAAmount + tokenBAmount / poolPrice.toNumber();
+                                return Math.round(tokenAAmount + tokenBAmount / poolPrice.toNumber());
                             }
                         } else if (poolTokenB == baseTokenMint) {
                             if (tokenBAmount > 0) {
-                                return poolPrice.toNumber() * tokenAAmount + tokenBAmount;
+                                return Math.round(poolPrice.toNumber() * tokenAAmount + tokenBAmount);
                             }
                         }
                         return 0;

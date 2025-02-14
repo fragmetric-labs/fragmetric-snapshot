@@ -33,7 +33,7 @@ $ npx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7
 
 ### How to Contribute
 ```shell
-$ pnpm run dev -- --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpm run dev --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
 
 $ pnpm run build && npm version patch --force && npm publish --access public --tag dev | latest
