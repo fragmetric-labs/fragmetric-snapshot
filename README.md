@@ -1,11 +1,12 @@
 # Fragmetric Snapshot
 
 ### Requirement
-- uses pnpm: https://pnpm.io/installation
+- uses pnpm **version 10**: https://pnpm.io/installation
 
 ### Usage
 ```shell
-$ pnpm dlx @fragmetric-labs/snapshot@latest --help
+$ NPM_CONFIG_AUTO_INSTALL_PEERS=false pnpm i -g -s @fragmetric-labs/snapshot@latest
+$ fragmetric-snapshot --help
 Usage: fragmetric-snapshot [options] <source> [source-args>
 
 CLI to take arbitrary onchain snapshots for Fragmetric platform
@@ -21,7 +22,7 @@ Options:
   -h, --help            display help for command
 
 
-$ pnpm dlx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 {"owner":"59yVBmP4zcPgq9FPoRktwJUzC2NgZfqSFxiRr9UKUqP3","baseTokenBalance":2742875614.433223}
 {"owner":"4A5p7zgmGfNbv2pejyv4P4jy1RRxx3KKz1MgejDHe6TC","baseTokenBalance":14749271505953.082}
 {"owner":"gEoLbi5KLsVJmNMHUp3aJgktqHT51p7ADCA2A4ZJzxX","baseTokenBalance":174338201.17712158}
