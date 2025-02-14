@@ -21,7 +21,7 @@ Options:
   -h, --help            display help for command
 
 
-$ npx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpm dlx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 {"owner":"59yVBmP4zcPgq9FPoRktwJUzC2NgZfqSFxiRr9UKUqP3","baseTokenBalance":2742875614.433223}
 {"owner":"4A5p7zgmGfNbv2pejyv4P4jy1RRxx3KKz1MgejDHe6TC","baseTokenBalance":14749271505953.082}
 {"owner":"gEoLbi5KLsVJmNMHUp3aJgktqHT51p7ADCA2A4ZJzxX","baseTokenBalance":174338201.17712158}
@@ -33,9 +33,12 @@ $ npx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7
 
 ### How to Contribute
 ```shell
-$ pnpm run dev --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpm dev --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
 
-$ pnpm run build && npm version patch --force && npm publish --access public --tag dev | latest
+$ pnpm build && pnpm publish --access public --tag dev
+...
+
+$ npm dist-tag add @fragmetric-labs/snapshot@1.1.0 latest
 ...
 ```

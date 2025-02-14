@@ -54,9 +54,9 @@ export class RPCClient {
         return null;
     }
 
-    async getTokenSupply(mintAddress: string) {
+    async getTokenSupply(mintAddress: web3.PublicKey): Promise<web3.TokenAmount> {
         return retry(this.retryOptions, () => {
-            return this.v1.getTokenSupply(new web3.PublicKey(mintAddress))
+            return this.v1.getTokenSupply(mintAddress)
                 .then(res => res.value);
         });
     }
