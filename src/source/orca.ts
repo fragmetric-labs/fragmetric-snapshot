@@ -51,6 +51,8 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
                     }
                 })();
                 const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
+                if (!positionTokenAccount) continue;
+
                 const snapshot: Snapshot = {
                     owner: positionTokenAccount,
                     baseTokenBalance: (function() {
