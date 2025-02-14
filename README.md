@@ -5,7 +5,7 @@
 
 ### Usage
 ```shell
-$ NPM_CONFIG_AUTO_INSTALL_PEERS=false pnpm i -g -s @fragmetric-labs/snapshot@latest
+$ NPM_CONFIG_AUTO_INSTALL_PEERS=false pnpm i -g @fragmetric-labs/snapshot@latest
 $ fragmetric-snapshot --help
 Usage: fragmetric-snapshot [options] <source> [source-args>
 
@@ -40,6 +40,6 @@ $ pnpm dev --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqh
 $ pnpm build && pnpm publish --access public --tag dev
 ...
 
-$ npm dist-tag add @fragmetric-labs/snapshot@1.1.0 latest
+$ npm dist-tag add @fragmetric-labs/snapshot@1.x.x latest
 ...
 ```
