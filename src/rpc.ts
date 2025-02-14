@@ -21,7 +21,7 @@ export class RPCClient {
     }
 
     async getNFTOwnerByMintAddress(mintAddress: string): Promise<string | null> {
-        const res = await retry(this.retryOptions, async () => {
+        const data = await retry(this.retryOptions, async () => {
             const res = await fetch(this.endpoint, {
                 method: 'POST',
                 headers: {
@@ -29,7 +29,7 @@ export class RPCClient {
                 },
                 body: JSON.stringify({
                     "jsonrpc": "2.0",
-                    "id": "test",
+                    "id": "RPCClient.getNFTOwnerByMintAddress",
                     "method": "getTokenAccounts",
                     "params": {
                         "mint": mintAddress,
@@ -39,11 +39,19 @@ export class RPCClient {
                     },
                 }),
             });
-            if (res.status == 429 || res.status > 500) throw new Error("rpc server error");
-            return res;
+            if (res.status == 429 || res.status > 500) {
+                const msg = `rpc server error: ${res.status}`;
+                logger.warn(msg);
+                throw new Error(msg);
+            }
+            return res.json();
         })
 
-        const data = await res.json();
+        if (data.error) {
+            const msg = `rpc server error: ${data.error.message ?? JSON.stringify(data.error)}`;
+            logger.error(`rpc server error`, { ...data });
+            throw new Error(msg);
+        }
         for (const tokenAccount of data.result.token_accounts) {
             if (tokenAccount.amount == 1) {
                 return tokenAccount.owner;
