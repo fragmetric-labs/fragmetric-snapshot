@@ -1,8 +1,11 @@
 # Fragmetric Snapshot
 
+### Requirement
+- uses pnpm: https://pnpm.io/installation
+
 ### Usage
 ```shell
-$ npx --yes @fragmetric-labs/snapshot@latest --help
+$ pnpm dlx @fragmetric-labs/snapshot@latest --help
 Usage: fragmetric-snapshot [options] <source> [source-args>
 
 CLI to take arbitrary onchain snapshots for Fragmetric platform
@@ -30,9 +33,9 @@ $ npx @fragmetric-labs/snapshot --silent --rpc '<RPC-URL>' orca-liquidity 7FcvD7
 
 ### How to Contribute
 ```shell
-$ npm run dev -- --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpm run dev -- --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
 
-$ npm run build && npm version patch --force && npm publish --access public --tag dev | latest
+$ pnpm run build && npm version patch --force && npm publish --access public --tag dev | latest
 ...
 ```

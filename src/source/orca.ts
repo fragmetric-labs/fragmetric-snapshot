@@ -1,11 +1,10 @@
-import web3 from '@solana/web3.js-1';
+import web3 from "@solana/web3.js-1";
 import * as orca from "@orca-so/whirlpools";
-import {SourceStreamOptions} from "./index";
+import {SourceStreamOptions, Snapshot} from "./index";
 import {RPCClient} from "../rpc";
 import {logger} from "../logger";
-import {TokenBalanceSnapshot} from "./snapshot";
 
-// args: pool address, wrapped token mint, other token mint, [whirlpool config]
+// args: pool address, base token mint, other token mint, [whirlpool config]
 export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
     const rpc = new RPCClient(opts.rpc); // opts.rpc
 
@@ -28,7 +27,7 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
     logger.info(`pool total positions: ${positionsInfo.length}`);
 
     // now initialization phase finished, begin streaming
-    const _ = (async function(){
+    process.nextTick(async () => {
         for (const pos of positionsInfo) {
             const lowerPrice = 1.0001 ** pos.data.tickLowerIndex;
             const upperPrice = 1.0001 ** pos.data.tickUpperIndex;
@@ -51,7 +50,7 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
                 }
             })();
             const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
-            const snapshot: TokenBalanceSnapshot = {
+            const snapshot: Snapshot = {
                 owner: positionTokenAccount,
                 baseTokenBalance: (function() {
                     if (poolTokenA == baseTokenMint) {
@@ -66,7 +65,8 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
                     return 0;
                 })(),
             };
-            opts.produce(snapshot);
+            opts.produceSnapshot(snapshot);
         }
-    })()
+        opts.close();
+    });
 }

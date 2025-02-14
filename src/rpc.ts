@@ -1,12 +1,14 @@
+import web3 from "@solana/web3.js-1";
 import web3v2 from "@solana/web3.js-2";
-import web3 from "@solana/web3.js";
 
 export class RPCClient {
     public readonly v2: web3v2.Rpc<any>;
+    public readonly v1: web3.Connection;
     public readonly cluster: 'mainnet'|'devnet';
 
     constructor(private readonly endpoint: string) {
         this.v2 = web3v2.createSolanaRpc(endpoint);
+        this.v1 = new web3.Connection(endpoint)
         this.cluster = endpoint.includes('mainnet') ? 'mainnet' : 'devnet';
     }
 
@@ -35,5 +37,9 @@ export class RPCClient {
             }
         }
         throw new Error("NTF owner not found");;
+    }
+
+    async getTokenSupply(mintAddress: string) {
+        return this.v1.getTokenSupply(new web3.PublicKey(mintAddress)).then(res => res.value);
     }
 }

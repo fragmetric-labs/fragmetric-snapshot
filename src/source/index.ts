@@ -1,6 +1,11 @@
-import { Readable } from 'stream';
+import { Readable } from "stream";
 import {produceOrcaLiquidity} from "./orca";
 import { produceKaminoLiquidity } from './kamino';
+
+export type Snapshot = {
+    owner: string;
+    baseTokenBalance: number;
+}
 
 export type CreateSourceStreamOptions = {
     rpc: string;
@@ -9,7 +14,8 @@ export type CreateSourceStreamOptions = {
 }
 
 export type SourceStreamOptions = CreateSourceStreamOptions & {
-    produce: (snapshot: any) => void;
+    produceSnapshot: (snapshot: Snapshot) => void;
+    close: () => void;
 }
 
 export function createSourceStream(opts: CreateSourceStreamOptions): Promise<Readable> {
@@ -31,8 +37,11 @@ class JSONReadableStream extends Readable {
 
         const options: SourceStreamOptions = {
             ...opts,
-            produce: (snapshot: any) => {
+            produceSnapshot: (snapshot) => {
                 this.push(JSON.stringify(snapshot) + "\n");
+            },
+            close: () => {
+                this.destroy();
             },
         }
 
@@ -47,7 +56,10 @@ class JSONReadableStream extends Readable {
                         break;
                     case 'test':
                         this.intervalId = setInterval(() => {
-                            options.produce({ hello: "world", time: new Date() });
+                            options.produceSnapshot({
+                                owner: "owner_public_key",
+                                baseTokenBalance: new Date().getTime(),
+                            });
                         }, 1000);
                         break;
                     default:
