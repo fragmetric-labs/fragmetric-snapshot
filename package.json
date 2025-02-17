@@ -19,6 +19,7 @@
     "index.js"
   ],
   "dependencies": {
+    "@kamino-finance/farms-sdk": "^2.4.0",
     "@kamino-finance/kliquidity-sdk": "^7.0.13",
     "@orca-so/whirlpools": "^1.0.3",
     "@solana/web3.js-1": "npm:@solana/web3.js@^1.98.0",
