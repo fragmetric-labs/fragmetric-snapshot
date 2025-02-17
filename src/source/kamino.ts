@@ -3,6 +3,7 @@ import { Kamino } from "@kamino-finance/kliquidity-sdk";
 import { Farms, scaleDownWads } from "@kamino-finance/farms-sdk";
 import { RPCClient } from "../rpc";
 import { SourceStreamOptions, Snapshot } from "./index";
+import Decimal from "decimal.js";
 
 // args: kamino strategy address, base token mint, other token mint
 export async function produceKaminoLiquidity(opts: SourceStreamOptions) {
@@ -30,24 +31,31 @@ export async function produceKaminoLiquidity(opts: SourceStreamOptions) {
     if (!kaminoPosition) {
         throw new Error("kamino position info not found");
     }
-
+    const kaminoLiquidity = new Decimal(kaminoPosition.liquidity.toString());
     const lowerPrice = 1.0001 ** kaminoPosition.tickLowerIndex;
     const upperPrice = 1.0001 ** kaminoPosition.tickUpperIndex;
+    const kaminoLiquidityTokenAAmount = kaminoLiquidity.mul(calcTokenAAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice));
+    const kaminoLiquidityTokenBAmount = kaminoLiquidity.mul(calcTokenBAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice));
 
     const farmState = (await farms.getAllFarmStatesByPubkeys([strategyInfo.farm]))[0];
-    const usersAtFarm = await farms.getAllUserStatesForFarm(strategyInfo.farm);
+    const farmUsers = await farms.getAllUserStatesForFarm(strategyInfo.farm);
 
-    const strategySharesMintSupply = await rpc.getTokenSupply(strategyInfo.sharesMint);
-    const holders = await kamino.getStrategyHolders(strategy);
-    const validHolders = holders.filter(holder => holder.amount.greaterThan(0) && holder.holderPubkey.toString() != farmState.farmState.farmVaultsAuthority.toString());
+    const sharesMintSupply = await rpc.getTokenSupply(strategyInfo.sharesMint);
+    const sharesTotal = new Decimal(sharesMintSupply.amount).div(Decimal.pow(10, sharesMintSupply.decimals));
+
+    const sharesHolders = await kamino.getStrategyHolders(strategy);
+    const farmShareHolder = sharesHolders.find(holder => holder.holderPubkey.equals(farmState.farmState.farmVaultsAuthority));
+    const farmShareRatio = sharesTotal.isZero() ? new Decimal(0) : (farmShareHolder?.amount ?? new Decimal(0)).div(sharesTotal);
+    const nonFarmShareHolders = farmShareHolder ? sharesHolders.filter(holder => holder !== farmShareHolder) : sharesHolders;
 
     process.nextTick(() => {
         try {
-            for (const holder of validHolders) {
-                const holderShareRate = holder.amount.div(Number(strategySharesMintSupply.amount) / 10**strategySharesMintSupply.decimals);
+            for (const holder of nonFarmShareHolders) {
+                if (holder.amount.isZero()) continue;
 
-                const tokenAAmount = Number(kaminoPosition.liquidity) * holderShareRate.toNumber() * calcTokenAAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice);
-                const tokenBAmount = Number(kaminoPosition.liquidity) * holderShareRate.toNumber() * calcTokenBAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice);
+                const holderShareRatio = holder.amount.div(sharesTotal);
+                const tokenAAmount = kaminoLiquidityTokenAAmount.mul(holderShareRatio).toNumber();
+                const tokenBAmount = kaminoLiquidityTokenBAmount.mul(holderShareRatio).toNumber();
 
                 const snapshot: Snapshot = {
                     owner: holder.holderPubkey.toString(),
@@ -58,11 +66,11 @@ export async function produceKaminoLiquidity(opts: SourceStreamOptions) {
                 opts.produceSnapshot(snapshot);
             }
 
-            for (const user of usersAtFarm) {
-                const holderShareRate = scaleDownWads(user.userState.activeStakeScaled) / scaleDownWads(farmState.farmState.totalActiveStakeScaled);
-
-                const tokenAAmount = Number(kaminoPosition.liquidity) * holderShareRate * calcTokenAAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice);
-                const tokenBAmount = Number(kaminoPosition.liquidity) * holderShareRate * calcTokenBAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice);
+            for (const user of farmUsers) {
+                if (user.userState.activeStakeScaled.isZero()) continue;
+                const holderShareRatio = new Decimal(user.userState.activeStakeScaled.toString()).div(new Decimal(farmState.farmState.totalActiveStakeScaled.toString()));
+                const tokenAAmount = kaminoLiquidityTokenAAmount.mul(holderShareRatio).mul(farmShareRatio).toNumber();
+                const tokenBAmount = kaminoLiquidityTokenBAmount.mul(holderShareRatio).mul(farmShareRatio).toNumber();
 
                 const snapshot: Snapshot = {
                     owner: user.userState.owner.toString(),
