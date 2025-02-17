@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "rm -rf ./dist && tsc",
-    "dev": "ts-node --transpile-only ./src/index.ts"
+    "start": "ts-node --transpile-only ./src/index.ts"
   },
   "files": [
     "dist",
