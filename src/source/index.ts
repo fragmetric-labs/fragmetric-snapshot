@@ -1,6 +1,7 @@
 import { Readable } from "stream";
-import {produceOrcaLiquidity} from "./orca";
+import { produceOrcaLiquidity } from "./orca";
 import { produceKaminoLiquidity } from './kamino';
+import { produceExponentLiquidity } from './exponent';
 
 export type Snapshot = {
     owner: string;
@@ -53,6 +54,9 @@ class JSONReadableStream extends Readable {
                         break;
                     case 'kamino-liquidity':
                         await produceKaminoLiquidity(options);
+                        break;
+                    case 'exponent-liquidity':
+                        await produceExponentLiquidity(options);
                         break;
                     case 'test':
                         this.intervalId = setInterval(() => {
