@@ -19,7 +19,12 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
         new AnchorProvider(rpc.v1, new Wallet(web3.Keypair.generate())),
     );
     const fragmetricFunds = await RestakingClient.createAll({ cluster: rpc.cluster, connection: rpc.v1 });
-    const fragmetricFund = fragmetricFunds.filter(async fund => ((await fund.state.receiptToken()).wrappedTokenMint?.toString() == inputToken.toString()))[0];
+    const fragmetricFund = (await Promise.all(fragmetricFunds.map(async fund => {
+        const receiptToken = await fund.state.receiptToken();
+        if (receiptToken.wrappedTokenMint?.equals(inputToken)) {
+            return fund;
+        }
+    })).then(funds => funds.filter(fund => fund !== undefined)))[0];
     const receiptTokenData = await fragmetricFund.state.receiptToken();
 
     const ytBalances = await getYtBalancesForVault(exponentCoreProgram, market);
