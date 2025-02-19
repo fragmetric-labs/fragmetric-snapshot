@@ -1,6 +1,6 @@
 import web3 from "@solana/web3.js-1";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
-import { SourceStreamOptions } from "./index";
+import { Snapshot, SourceStreamOptions } from "./index";
 import { RPCClient } from "../rpc";
 import { ExponentCore } from "../idl/exponent_core";
 import { RestakingClient } from "@fragmetric-labs/sdk";
@@ -18,33 +18,26 @@ export async function produceExponentLiquidity(opts: SourceStreamOptions) {
         new AnchorProvider(rpc.v1, new Wallet(web3.Keypair.generate())),
     );
     const fragmetricFunds = await RestakingClient.createAll({ cluster: rpc.cluster, connection: rpc.v1 });
-    const fragmetricFund = fragmetricFunds.filter(fund => fund.receiptTokenMint.toString() == inputToken.toString())[0];
+    const fragmetricFund = fragmetricFunds.filter(async fund => ((await fund.state.receiptToken()).wrappedTokenMint?.toString() == inputToken.toString()))[0];
+    const receiptTokenData = await fragmetricFund.state.receiptToken();
 
     const balances = await getBalancesForVault(exponentCoreProgram, market);
 
-    const inputTokenData = await fragmetricFund.state.receiptToken();
+    process.nextTick(async () => {
+        try {
+            for (const yt of balances.ytBalances) {
+                const snapshot: Snapshot = {
+                    owner: yt.owner.toString(),
+                    baseTokenBalance: Math.round(Number(yt.amount) / receiptTokenData.oneTokenAsSOL * 10**(receiptTokenData.decimals - (await balances.mintYt).decimals * 10**(receiptTokenData.decimals))),
+                };
 
-    balances.ytBalances.map((yt, i) => {
-        return balances.syProportions.map(async (sy, j) => {
-            if (yt.owner.toString() == sy.owner.toString()) {
-                console.log(yt.owner.toString(), i, j, `yt balance ${yt.amount}, sy proportions ${sy.amount}, fpoint balances ${Math.round(Number(yt.amount) / inputTokenData.oneTokenAsSOL * 10**(inputTokenData.decimals - (await balances.mintYt).decimals * 10**(inputTokenData.decimals)))}`);
-                return;
+                opts.produceSnapshot(snapshot);
             }
-            if (j == balances.syProportions.length - 1) {
-                console.log(yt.owner.toString(), i, j, `yt balance ${yt.amount}, no sy`);
-                return;
-            }
-        });
+        } catch (error) {
+            opts.close(error as Error);
+            return;
+        }
     });
-
-    // process.nextTick(() => {
-    //     try {
-
-    //     } catch (error) {
-    //         opts.close(error as Error);
-    //         return;
-    //     }
-    // });
 }
 
 type UserBalance = {
@@ -56,14 +49,12 @@ async function getMarketAndLpSupply({ exponentCoreProgram, marketAddress }: { ex
     const market = await exponentCoreProgram.account.marketTwo.fetch(marketAddress);
     const lpMint = await getMint(exponentCoreProgram.provider.connection, market.mintLp);
 
-    console.log(`market`, market);
-    console.log(`market cpiAccounts:`, market.cpiAccounts);
-
     return {
         vault: market.vault,
         syBalance: BigInt(market.financials.syBalance.toString()),
         mintSy: market.mintSy,
         lpSupply: BigInt(lpMint.supply.toString()),
+        marketExpirationTs: market.financials.expirationTs,
     };
 }
 
@@ -72,25 +63,29 @@ async function getLpAccounts({ exponentCoreProgram, marketAddress }: { exponentC
         { memcmp: { offset: 40, bytes: marketAddress.toBase58() } },
     ]);
 
-    console.log(`lpPositionAccounts:`, lpPositionAccounts);
-
     return lpPositionAccounts.map((a) => ({
         owner: a.account.owner,
         lpBalance: BigInt(a.account.lpBalance.toString()),
     }));
 }
 
-async function getYtAccounts({ exponentCoreProgram, vaultAddress }: { exponentCoreProgram: Program<ExponentCore>, vaultAddress: web3.PublicKey }) {
+async function getYtAccounts({ exponentCoreProgram, vaultAddress, expirationTs }: { exponentCoreProgram: Program<ExponentCore>, vaultAddress: web3.PublicKey, expirationTs: number }) {
     const ytAccounts = await exponentCoreProgram.account.yieldTokenPosition.all([
         { memcmp: { offset: 40, bytes: vaultAddress.toBase58() } },
     ]);
 
-    // console.log(`ytAccounts:`, ytAccounts);
+    const currentDate = new Date();
+    const expirationDate = new Date(expirationTs * 1000);
 
-    return ytAccounts.map((a) => ({
-        owner: a.account.owner,
-        ytBalance: BigInt(a.account.ytBalance.toString()),
-    }));
+    return ytAccounts.reduce((acc: Array<Object>, a) => {
+        if (currentDate < expirationDate) {
+            acc.push({
+                owner: a.account.owner,
+                ytBalance: BigInt(a.account.ytBalance.toString()),
+            });
+        }
+        return acc;
+    }, []);
 }
 
 async function getMintYt({ exponentCoreProgram, mintSy }: { exponentCoreProgram: Program<ExponentCore>, mintSy: web3.PublicKey }) {
@@ -99,8 +94,6 @@ async function getMintYt({ exponentCoreProgram, mintSy }: { exponentCoreProgram:
     ]);
 
     return vaults.map(async (v) => {
-        console.log(`vault ${v.publicKey}:`, v);
-        console.log(`vault account cpiAccounts ${v.publicKey}:`, v.account.cpiAccounts);
         const mintYt = await getMint(exponentCoreProgram.provider.connection, v.account.mintYt);
         return {
             mintYt: v.account.mintYt,
@@ -124,34 +117,20 @@ function calculateSyProportionFromLp({
 } 
 
 export async function getBalancesForVault(exponentCoreProgram: Program<ExponentCore>, marketAddress: web3.PublicKey) {
-    console.log(`Fetching balances for market ${marketAddress.toString()}...`);
-
     // Fetch all necessary data
     const marketData = await getMarketAndLpSupply({ exponentCoreProgram, marketAddress });
     const vaultAddress = marketData.vault;
     const [lpAccounts, ytAccounts] = await Promise.all([
         getLpAccounts({ exponentCoreProgram, marketAddress }),
-        getYtAccounts({ exponentCoreProgram, vaultAddress }),
+        getYtAccounts({ exponentCoreProgram, vaultAddress, expirationTs: marketData.marketExpirationTs }),
     ]);
     const mintYts = await getMintYt({ exponentCoreProgram, mintSy: marketData.mintSy });
-    // console.log(`mintYt:`, mintYt);
-    // const [mintYts] = await Promise.all([
-    //     getMintYtSupply({ mintSy: marketData.mintSy }),
-    // ]);
-    mintYts.map(async (yt) => {
-        console.log(`yt:`, await yt);
-    });
 
     // Process YT balances
     const ytBalances: UserBalance[] = ytAccounts.map((account) => ({
         owner: account.owner.toString(),
         amount: account.ytBalance.toString(),
     }));
-
-    lpAccounts.map((a) => {
-        console.log(`${a.owner} lpBalance ${a.lpBalance}`);
-        console.log(`lp supply ${marketData.lpSupply}`);
-    });
 
     // Process LP balances to get SY proportions
     const syProportions: UserBalance[] = lpAccounts.map((account) => ({
