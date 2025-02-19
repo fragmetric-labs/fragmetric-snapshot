@@ -5,9 +5,10 @@ import { RPCClient } from "../rpc";
 import { ExponentCore } from "../idl/exponent_core";
 import { RestakingClient } from "@fragmetric-labs/sdk";
 import { getMint } from "@solana/spl-token";
+import Decimal from "decimal.js";
 
 // args: exponent market address, input token mint
-export async function produceExponentLiquidity(opts: SourceStreamOptions) {
+export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
     const rpc = new RPCClient(opts.rpc);
 
     const market = new web3.PublicKey(opts.args[0]);
@@ -26,9 +27,16 @@ export async function produceExponentLiquidity(opts: SourceStreamOptions) {
     process.nextTick(async () => {
         try {
             for (const yt of ytBalances.ytBalances) {
+                const ytAmount = new Decimal(yt.amount);
+                const receiptTokenOneTokenAsSOL = new Decimal(receiptTokenData.oneTokenAsSOL.toString());
+
                 const snapshot: Snapshot = {
                     owner: yt.owner.toString(),
-                    baseTokenBalance: Math.round(Number(yt.amount) / receiptTokenData.oneTokenAsSOL * 10**(receiptTokenData.decimals - (await ytBalances.mintYt).decimals * 10**(receiptTokenData.decimals))),
+                    baseTokenBalance: Decimal.round(
+                        ytAmount.div(receiptTokenOneTokenAsSOL)
+                        .mul(Decimal.pow(10, receiptTokenData.decimals - (await ytBalances.mintYt).decimals))
+                        .mul(Decimal.pow(10, receiptTokenData.decimals))
+                    ).toNumber(),
                 };
 
                 opts.produceSnapshot(snapshot);
