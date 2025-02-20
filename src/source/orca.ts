@@ -68,7 +68,7 @@ export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
                         return 0;
                     })(),
                 };
-                if (snapshot.baseTokenBalance > 0)  continue;
+                if (snapshot.baseTokenBalance == 0)  continue;
                 opts.produceSnapshot(snapshot);
             }
         } catch (err) {
