@@ -136,12 +136,10 @@ async function getMintYt({
     if (!mintInfo) throw new Error("Mint not found");
 
     const data = Buffer.from(mintInfo.data);
-    const supply = data.readBigUInt64LE(4);
     const decimals = data[44];
 
     return {
       mintYt: v.account.mintYt,
-      supply,
       decimals,
     };
   });
