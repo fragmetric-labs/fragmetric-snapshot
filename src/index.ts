@@ -43,23 +43,22 @@ Promise.all([
     }),
 ])
 .then(([outputStream, sourceStream]) => {
-    sourceStream.pipe(outputStream);
     sourceStream.on("error", (error: any) => {
         logger.error("exception occurred from source stream", {error});
         setTimeout(() => process.exit(1), 1000);
     });
     sourceStream.on("close", () => {
         logger.info("source stream closed");
-        setTimeout(() => process.exit(0), 1000);
     });
     outputStream.on("error", (error: any) => {
         logger.error("exception occurred from output stream", {error});
         setTimeout(() => process.exit(1), 1000);
     });
     outputStream.on("close", () => {
-        logger.info("output stream exceptionally closed");
-        setTimeout(() => process.exit(1), 1000);
+        logger.info("output stream closed");
     });
+
+    sourceStream.pipe(outputStream);
 }).catch((error) => {
     logger.error("exception occurred while initializing source/output streams", {error});
     setTimeout(() => process.exit(1), 1000);

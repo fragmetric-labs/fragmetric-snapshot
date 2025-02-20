@@ -41,7 +41,11 @@ class JSONReadableStream extends Readable {
                 this.push(JSON.stringify(snapshot) + "\n");
             },
             close: (err) => {
-                this.destroy(err);
+                if (err) {
+                    this.destroy(err);
+                } else {
+                    this.push(null);
+                }
             },
         }
 
