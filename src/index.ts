@@ -1,3 +1,4 @@
+import './require';
 import {program} from "commander";
 import {logger} from "./logger";
 import {createSourceStream} from "./source";

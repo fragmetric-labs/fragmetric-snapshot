@@ -19,6 +19,7 @@
     "index.js"
   ],
   "dependencies": {
+    "@fragmetric-labs/sdk": "^1.0.2",
     "@kamino-finance/farms-sdk": "^2.4.0",
     "@kamino-finance/kliquidity-sdk": "^7.0.13",
     "@orca-so/whirlpools": "^1.0.3",
