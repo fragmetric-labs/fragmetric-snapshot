@@ -1,6 +1,13 @@
 import { Readable } from 'stream';
 import { produceOrcaLiquidity } from './orca';
 import { produceKaminoLiquidity } from './kamino';
+import { produceExponentYieldTrading } from './exponent';
+
+export const sources = [
+  'orca-liquidity' as 'orca-liquidity',
+  'kamino-liquidity' as 'kamino-liquidity',
+  'exponent-yield-trading' as 'exponent-yield-trading',
+];
 
 export type Snapshot = {
   owner: string;
@@ -9,7 +16,7 @@ export type Snapshot = {
 
 export type CreateSourceStreamOptions = {
   rpc: string;
-  source: string;
+  source: (typeof sources)[number];
   args: string[];
 };
 
@@ -58,13 +65,8 @@ class JSONReadableStream extends Readable {
           case 'kamino-liquidity':
             await produceKaminoLiquidity(options);
             break;
-          case 'test':
-            this.intervalId = setInterval(() => {
-              options.produceSnapshot({
-                owner: 'owner_public_key',
-                baseTokenBalance: new Date().getTime(),
-              });
-            }, 1000);
+          case 'exponent-yield-trading':
+            await produceExponentYieldTrading(options);
             break;
           default:
             process.nextTick(() => {

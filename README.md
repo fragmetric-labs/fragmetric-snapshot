@@ -3,7 +3,8 @@
 ### Usage
 
 ```shell
-$ npx @fragmetric-labs/snapshot
+# can use @dev tag for unstable version
+$ npx -y @fragmetric-labs/snapshot@latest --help
 Usage: fragmetric-snapshot [options] <source> [source-args>
 
 CLI to take arbitrary onchain snapshots for Fragmetric platform
@@ -24,9 +25,14 @@ $ npx @fragmetric-labs/snapshot --rpc '<RPC-URL>' orca-liquidity Cso7i3czFUiBo7r
 
 $ npx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
+
+$ npx @fragmetric-labs/snapshot --rpc '<RPC-URL>' exponent-yield-trading EJ4GPTCnNtemBVrT7QKhRfSKfM53aV2UJYGAC8gdVz5b WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+...
+
 ```
 
 ### How to Contribute
+
 - uses pnpm **version 10**: https://pnpm.io/installation
 
 ```shell
