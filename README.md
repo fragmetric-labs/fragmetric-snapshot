@@ -1,9 +1,14 @@
 # Fragmetric Snapshot
 
+### Requirements
+
+- uses pnpm **version 10**: https://pnpm.io/installation
+
 ### Usage
 
 ```shell
-$ npx @fragmetric-labs/snapshot
+# can use @dev tag for unstable version
+$ pnpx @fragmetric-labs/snapshot@latest --help
 Usage: fragmetric-snapshot [options] <source> [source-args>
 
 CLI to take arbitrary onchain snapshots for Fragmetric platform
@@ -19,15 +24,18 @@ Options:
   -h, --help            display help for command
 
 
-$ npx @fragmetric-labs/snapshot --rpc '<RPC-URL>' orca-liquidity Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL
+$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' orca-liquidity Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL
 ...
 
-$ npx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
+
+$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' exponent-yield-trading EJ4GPTCnNtemBVrT7QKhRfSKfM53aV2UJYGAC8gdVz5b WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+...
+
 ```
 
 ### How to Contribute
-- uses pnpm **version 10**: https://pnpm.io/installation
 
 ```shell
 $ pnpm install
@@ -36,9 +44,9 @@ $ pnpm install
 $ pnpm start --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
 
-$ pnpm build && pnpm publish --access public --tag dev
+$ pnpm build && npm publish --access public --tag dev
 ...
 
-$ npm dist-tag add @fragmetric-labs/snapshot@1.x.x latest
+$ npm dist-tag add @fragmetric-labs/snapshot@x.x.x latest
 ...
 ```

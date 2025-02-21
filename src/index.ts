@@ -1,7 +1,7 @@
 import './require';
 import { program } from 'commander';
 import { logger } from './logger';
-import { createSourceStream } from './source';
+import { createSourceStream, sources } from './source';
 import { createOutputStream } from './output';
 
 program
@@ -12,9 +12,9 @@ program
   .option('-r, --rpc <url>', 'Solana RPC URL')
   .option(
     '-o, --output <path>',
-    'Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock, ...',
+    'Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock',
   )
-  .argument('source [source-args]', 'orca-liquidity pool tokenA tokenB, ...')
+  .argument('source [source-args]', `${sources.join('|')} [source-args]`)
   .allowExcessArguments(true)
   .showHelpAfterError()
   .parse();
@@ -42,7 +42,7 @@ Promise.all([
   }),
   createSourceStream({
     rpc: options.rpc,
-    source: options.source,
+    source: options.source as any,
     args: options.sourceArgs,
   }),
 ])
