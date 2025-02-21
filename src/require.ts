@@ -4,7 +4,8 @@ const originalRequire = Module.prototype.require;
 
 // monkey-patch Node.js' require function to control how @solana/web.js dependencies are resolved.
 
-const web3jsV1DependantsPattern = new RegExp([
+const web3jsV1DependantsPattern = new RegExp(
+  [
     '@fragmetric-labs/sdk',
     '@project-serum/anchor',
     '@project-serum/borsh',
@@ -19,18 +20,21 @@ const web3jsV1DependantsPattern = new RegExp([
     '@orca-so/whirlpool-sdk',
     '@orca-so/whirlpool-client-sdk',
     '@hubbleprotocol/hubble-config',
-].map(token => token.replace(/[@/]/g, '\\$&')).join('|'));
+  ]
+    .map((token) => token.replace(/[@/]/g, '\\$&'))
+    .join('|'),
+);
 
 // console.log(web3jsV1DependantsPattern);
 
 Module.prototype.require = function (moduleName: string) {
-    if (moduleName == '@solana/web3.js') {
-        const stacktrace = new Error().stack ?? '';
-        if (web3jsV1DependantsPattern.test(stacktrace)) {
-            return originalRequire.call(this, '@solana/web3.js-1');
-        } else {
-            return originalRequire.call(this, '@solana/web3.js-2');
-        }
+  if (moduleName == '@solana/web3.js') {
+    const stacktrace = new Error().stack ?? '';
+    if (web3jsV1DependantsPattern.test(stacktrace)) {
+      return originalRequire.call(this, '@solana/web3.js-1');
+    } else {
+      return originalRequire.call(this, '@solana/web3.js-2');
     }
-    return originalRequire.call(this, moduleName);
+  }
+  return originalRequire.call(this, moduleName);
 };

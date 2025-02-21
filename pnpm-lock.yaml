@@ -29,6 +29,9 @@ importers:
       commander:
         specifier: ^13.1.0
         version: 13.1.0
+      decimal.js:
+        specifier: ^10.5.0
+        version: 10.5.0
       fastestsmallesttextencoderdecoder:
         specifier: ^1.0.22
         version: 1.0.22
@@ -42,6 +45,9 @@ importers:
       '@types/promise-retry':
         specifier: ^1.1.6
         version: 1.1.6
+      prettier:
+        specifier: ^3.5.1
+        version: 3.5.1
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.13.4)(typescript@5.7.3)
@@ -1004,6 +1010,11 @@ packages:
 
   pako@2.1.0:
     resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
+
+  prettier@3.5.1:
+    resolution: {integrity: sha512-hPpFQvHwL3Qv5AdRvBFMhnKo4tYxp0ReXiPn2bxkiohEX6mBeBwEpBSQTkD458RaaDKQMYSp4hX4UtfUTA5wDw==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   promise-retry@2.0.1:
     resolution: {integrity: sha512-y+WKFlBR8BGXnsNlIHFGPZmyDf3DFMoLhaflAnyZgV6rG6xu+JwesTo2Q9R6XwYmtmwAFCkAk3e35jEdoeh/3g==}
@@ -2585,6 +2596,8 @@ snapshots:
       fn.name: 1.1.0
 
   pako@2.1.0: {}
+
+  prettier@3.5.1: {}
 
   promise-retry@2.0.1:
     dependencies:
