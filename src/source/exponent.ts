@@ -69,6 +69,7 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
       opts.close(error as Error);
       return;
     }
+    opts.close();
   });
 }
 
