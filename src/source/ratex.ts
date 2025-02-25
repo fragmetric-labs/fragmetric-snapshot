@@ -1,5 +1,5 @@
 import {web3, Program, AnchorProvider, Wallet, Idl, ProgramAccount} from "@coral-xyz/anchor";
-import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import * as token from "@solana/spl-token";
 import { RatexContracts } from './ratex_idl';
 import RatexContractsIDLFile from './ratex_idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
@@ -114,7 +114,8 @@ async function getTotalDeposits({ rateXProgram, inputToken }: { rateXProgram: Pr
             rateXProgram.programId,
         );
         // console.log(`marginMarketPda: ${marginMarketPda}`);
-        const ata = getAssociatedTokenAddressSync(inputToken, marginMarketPda, true);
+        // @ts-ignore
+        const ata = token.getAssociatedTokenAddressSync(inputToken, marginMarketPda, true);
         const tokenBalanceData = (await rateXProgram.provider.connection.getTokenAccountBalance(ata)).value;
         totalDeposits = totalDeposits.add(new Decimal(tokenBalanceData.amount));
     }
