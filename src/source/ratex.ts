@@ -43,10 +43,25 @@ export async function produceRateXYieldTrading(opts: SourceStreamOptions) {
         throw new Error('failed to find matched fragmetric receipt token from given input token');
     }
 
+    const receiptTokenDecimals = receiptToken.decimals;
     const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
     const totalAmount = await getTotalDeposits({ rateXProgram, inputToken });
-    console.log(totalAmount);
     const userStatsList = await rateXProgram.account.userStats.all();
+    const userList = await rateXProgram.account.user.all();
+    const userMap = new Map<string, IdlAccounts<RatexContracts>['user']>();
+    for (const user of userList) {
+        userMap.set(user.publicKey.toBase58(), user.account);
+    }
+    const lpList = await rateXProgram.account.lp.all();
+    const lpMap = new Map<string, IdlAccounts<RatexContracts>['lp']>();
+    for (const lp of lpList) {
+        lpMap.set(lp.publicKey.toBase58(), lp.account);
+    }
+    const yieldMarketList = await rateXProgram.account.yieldMarket.all();
+    const yieldMarketMap = new Map<string, IdlAccounts<RatexContracts>['yieldMarket']>();
+    for (const yieldMarket of yieldMarketList) {
+        yieldMarketMap.set(yieldMarket.publicKey.toBase58(), yieldMarket.account);
+    }
 
     process.nextTick(async () => {
         try {
@@ -54,8 +69,14 @@ export async function produceRateXYieldTrading(opts: SourceStreamOptions) {
             for (const userStats of userStatsList) {
                 const baseTokenAmount = await calcUserToken({
                     rateXProgram,
-                    userStats: userStats.account,
                     receiptTokenOneTokenAsSOL,
+                    receiptTokenDecimals,
+                    accounts: {
+                        userStats: userStats.account,
+                        userMap,
+                        lpMap,
+                        yieldMarketMap,
+                    }
                 });
                 opts.produceSnapshot({
                     owner: userStats.account.authority.toBase58(),
@@ -120,89 +141,95 @@ function getTokenAmountsFromLiquidity({ liquidity, currentSqrtPrice, lowerSqrtPr
     }
 }
 
-async function calcUserToken({ rateXProgram, userStats, receiptTokenOneTokenAsSOL }: { rateXProgram: Program<RatexContracts>, userStats: IdlAccounts<RatexContracts>['userStats'], receiptTokenOneTokenAsSOL: Decimal }) {
+async function calcUserToken({rateXProgram, receiptTokenOneTokenAsSOL, receiptTokenDecimals, accounts }: {
+    rateXProgram: Program<RatexContracts>,
+    receiptTokenOneTokenAsSOL: Decimal,
+    receiptTokenDecimals: number,
+    accounts: {
+        userStats: IdlAccounts<RatexContracts>['userStats'],
+        userMap: Map<string, IdlAccounts<RatexContracts>['user']>,
+        lpMap: Map<string, IdlAccounts<RatexContracts>['lp']>,
+        yieldMarketMap: Map<string, IdlAccounts<RatexContracts>['yieldMarket']>,
+    }
+}) {
     let traderMarginAmount = new Decimal(0),
         traderStAmount = new Decimal(0),
         traderYtAmount = new Decimal(0),
         lpStAmount = new Decimal(0),
         lpYtAmount = new Decimal(0);
 
-    const userPDAs = [], lpPDAs = [];
-    for (let subAccountId = 0; subAccountId < userStats.numberOfSubAccountsCreated; subAccountId++) {
+    const userAddresses: string[] = [], lpAddresses: string[] = [];
+    for (let subAccountId = 0; subAccountId < accounts.userStats.numberOfSubAccountsCreated; subAccountId++) {
         const subAccountIdBuffer = Buffer.alloc(2);
         subAccountIdBuffer.writeUInt16LE(subAccountId);
-        const [userPDA,] = web3.PublicKey.findProgramAddressSync(
-            [Buffer.from("user"), userStats.authority.toBuffer(), subAccountIdBuffer],
+        const [userAddress,] = web3.PublicKey.findProgramAddressSync(
+            [Buffer.from("user"), accounts.userStats.authority.toBuffer(), subAccountIdBuffer],
             rateXProgram.programId,
         );
-        userPDAs.push(userPDA);
-        const [lpPDA,] = web3.PublicKey.findProgramAddressSync(
-            [Buffer.from("lp"), userStats.authority.toBuffer(), subAccountIdBuffer],
+        userAddresses.push(userAddress.toBase58());
+        const [lpAddress,] = web3.PublicKey.findProgramAddressSync(
+            [Buffer.from("lp"), accounts.userStats.authority.toBuffer(), subAccountIdBuffer],
             rateXProgram.programId,
         );
-        lpPDAs.push(lpPDA);
+        lpAddresses.push(lpAddress.toBase58());
     }
 
-    for (const userPda of userPDAs) {
-        try {
-            const userData = await rateXProgram.account.user.fetch(userPda);
-            traderMarginAmount = traderMarginAmount.add(new Decimal(userData.marginPositions[0].balance.toString()));
-            for (const yieldPosition of userData.yieldPositions) {
-                if (yieldPosition.lastRate.toNumber() > 0) {
-                    traderYtAmount = traderYtAmount.add(new Decimal(yieldPosition.baseAssetAmount.toString()));
-                    let rebaseStAmount = new Decimal(yieldPosition.quoteAssetAmount.toString())
-                        .add(
-                            new Decimal(yieldPosition.baseAssetAmount.toString())
-                                .add(new Decimal(yieldPosition.quoteAssetAmount.toString()))
-                        )
-                        .mul(
-                            receiptTokenOneTokenAsSOL.div(new Decimal(yieldPosition.lastRate.toString())).sub(new Decimal(1))
-                        );
-                    traderStAmount = traderStAmount.add(rebaseStAmount);
-                    // console.log(`traderMarginAmount: ${traderMarginAmount}, traderYtAmount: ${traderYtAmount}, rebaseStAmount: ${rebaseStAmount}, traderStAmount: ${traderStAmount}`);
-                }
-                // console.log(`yieldPosition:`, yieldPosition);
+    for (const userAddress of userAddresses) {
+        const user = accounts.userMap.get(userAddress);
+        if (!user) {
+            continue;
+        }
+        traderMarginAmount = traderMarginAmount.add(new Decimal(user.marginPositions[0].balance.toString()));
+        for (const yieldPosition of user.yieldPositions) {
+            if (yieldPosition.lastRate.toNumber() > 0) {
+                traderYtAmount = traderYtAmount.add(new Decimal(yieldPosition.baseAssetAmount.toString()));
+                const rebaseStAmount = new Decimal(yieldPosition.quoteAssetAmount.toString())
+                    .add(
+                        new Decimal(yieldPosition.baseAssetAmount.toString())
+                            .add(new Decimal(yieldPosition.quoteAssetAmount.toString()))
+                    )
+                    .mul(
+                        receiptTokenOneTokenAsSOL.div(new Decimal(yieldPosition.lastRate.toString())).sub(new Decimal(1))
+                    );
+                traderStAmount = traderStAmount.add(rebaseStAmount);
+                // console.log(`traderMarginAmount: ${traderMarginAmount}, traderYtAmount: ${traderYtAmount}, rebaseStAmount: ${rebaseStAmount}, traderStAmount: ${traderStAmount}`);
             }
-        } catch (err: any) {
-            if (!err.toString().includes("Account does not exist or has no data")) {
-                throw err;
-            }
+            // console.log(`yieldPosition:`, yieldPosition);
         }
     }
 
-    for (const lpPda of lpPDAs) {
-        try {
-            const lpData = await rateXProgram.account.lp.fetch(lpPda);
-            const ammPosition = lpData.ammPosition;
-            const liquidity = ammPosition.liquidity;
-            const tickLowerIndex = ammPosition.tickLowerIndex;
-            const lowerSqrtPrice = 1.0001 ** (tickLowerIndex/2) * 2**64;
-            const tickUpperIndex = ammPosition.tickUpperIndex;
-            const upperSqrtPrice = 1.0001 ** (tickUpperIndex/2) * 2**64;
-            // console.log(`lpPda ${lpPda} data:`, lpData, `ammPosition.ammpool ${ammPosition.ammpool}`);
-            const ammPool = await rateXProgram.account.yieldMarket.fetch(ammPosition.ammpool);
-            const currentSqrtPrice = ammPool.pool.sqrtPrice;
-            // console.log(`tickLowerIndex ${tickLowerIndex}, tickUpperIndex ${tickUpperIndex}, lowerSqrtPrice ${lowerSqrtPrice}, upperSqrtPrice ${upperSqrtPrice}, currentSqrtPrice ${currentSqrtPrice}`);
-            const [tokenA, tokenB] = getTokenAmountsFromLiquidity({
-                liquidity: new Decimal(liquidity.toString()),
-                currentSqrtPrice: new Decimal(currentSqrtPrice.toString()),
-                lowerSqrtPrice: new Decimal(lowerSqrtPrice),
-                upperSqrtPrice: new Decimal(upperSqrtPrice),
-                roundUp: true,
-            });
-            lpYtAmount = lpYtAmount.add(new Decimal(lpData.reserveBaseAmount.toString())).add(tokenA);
-            lpStAmount = lpStAmount.add(new Decimal(lpData.reserveQuoteAmount.toString())).add(tokenB);
-            // console.log(`tokenA ${tokenA}, tokenB ${tokenB}, lpYtAmount ${lpYtAmount}, lpStAmount ${lpStAmount}`);
-        } catch (err: any) {
-            if (!err.toString().includes("Account does not exist or has no data")) {
-                throw err;
-            }
-            // console.log(`lpPda ${lpPda} error:`, error);
+    for (const lpAddress of lpAddresses) {
+        const lp = accounts.lpMap.get(lpAddress);
+        if (!lp) {
+            continue;
         }
+        const ammPosition = lp.ammPosition;
+        const liquidity = ammPosition.liquidity;
+        const tickLowerIndex = ammPosition.tickLowerIndex;
+        const lowerSqrtPrice = 1.0001 ** (tickLowerIndex/2) * 2**64;
+        const tickUpperIndex = ammPosition.tickUpperIndex;
+        const upperSqrtPrice = 1.0001 ** (tickUpperIndex/2) * 2**64;
+        // console.log(`lpPda ${lpPda} data:`, lpData, `ammPosition.ammpool ${ammPosition.ammpool}`);
+        const ammPool = accounts.yieldMarketMap.get(ammPosition.ammpool.toBase58());
+        if (!ammPool) {
+            throw new Error(`cannot find the amm pool: ${ammPosition.ammpool.toBase58()}`);
+        }
+        const currentSqrtPrice = ammPool.pool.sqrtPrice;
+        // console.log(`tickLowerIndex ${tickLowerIndex}, tickUpperIndex ${tickUpperIndex}, lowerSqrtPrice ${lowerSqrtPrice}, upperSqrtPrice ${upperSqrtPrice}, currentSqrtPrice ${currentSqrtPrice}`);
+        const [tokenA, tokenB] = getTokenAmountsFromLiquidity({
+            liquidity: new Decimal(liquidity.toString()),
+            currentSqrtPrice: new Decimal(currentSqrtPrice.toString()),
+            lowerSqrtPrice: new Decimal(lowerSqrtPrice),
+            upperSqrtPrice: new Decimal(upperSqrtPrice),
+            roundUp: true,
+        });
+        lpYtAmount = lpYtAmount.add(new Decimal(lp.reserveBaseAmount.toString())).add(tokenA);
+        lpStAmount = lpStAmount.add(new Decimal(lp.reserveQuoteAmount.toString())).add(tokenB);
+        // console.log(`tokenA ${tokenA}, tokenB ${tokenB}, lpYtAmount ${lpYtAmount}, lpStAmount ${lpStAmount}`);
     }
 
     return (traderYtAmount.add(traderStAmount).add(lpYtAmount).add(lpStAmount))
-        .mul(Decimal.pow(10, 9))
+        .mul(Decimal.pow(10, receiptTokenDecimals))
         .div(receiptTokenOneTokenAsSOL)
         .add(traderMarginAmount)
 }
