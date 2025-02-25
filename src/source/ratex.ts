@@ -45,8 +45,11 @@ export async function produceRateXYieldTrading(opts: SourceStreamOptions) {
     throw new Error('failed to find matched fragmetric receipt token from given input token');
   }
 
+  const oracleList = await rateXProgram.account.oracle.all();
+  const oracleRate = oracleList[0].account.rate;
+
   const receiptTokenDecimals = receiptToken.decimals;
-  const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
+  const receiptTokenOneTokenAsSOL = new Decimal(oracleRate.toString());
   const totalAmount = await getTotalDeposits({ rateXProgram, inputToken });
 
   const userStatsList = await rateXProgram.account.userStats.all();
