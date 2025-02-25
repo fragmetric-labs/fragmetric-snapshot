@@ -41,7 +41,7 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
 
   process.nextTick(async () => {
     try {
-      const syProportionsMap: {[owner: string]: Decimal} = {}; // owner -> amount map
+      const syProportionsMap: { [owner: string]: Decimal } = {}; // owner -> amount map
       for (const balance of balances.syProportions) {
         syProportionsMap[balance.owner] = new Decimal(balance.amount);
       }
