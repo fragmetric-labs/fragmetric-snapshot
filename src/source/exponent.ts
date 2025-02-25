@@ -40,16 +40,21 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
 
   process.nextTick(async () => {
     try {
+      const syProportionsMap: {[owner: string]: Decimal} = {}; // owner -> amount map
+      for (const balance of balances.syProportions) {
+        syProportionsMap[balance.owner] = new Decimal(balance.amount);
+      }
+
+      const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
       for (const yt of balances.ytBalances) {
         const ytAmount = new Decimal(yt.amount);
-        const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
         const ytValue = ytAmount
           .mul(Decimal.pow(10, 2 * receiptToken.decimals - balances.mintYt.decimals))
           .div(receiptTokenOneTokenAsSOL)
           .floor();
 
-        const syProportion = balances.syProportions.find((sy) => sy.owner === yt.owner);
-        const syValue = syProportion ? new Decimal(syProportion.amount) : new Decimal(0);
+        const syValue = syProportionsMap[yt.owner] ?? new Decimal(0);
+        delete syProportionsMap[yt.owner];
 
         opts.produceSnapshot({
           owner: yt.owner.toString(),
@@ -57,13 +62,11 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
         });
       }
 
-      for (const sy of balances.syProportions) {
-        if (!balances.ytBalances.some((yt) => yt.owner == sy.owner)) {
-          opts.produceSnapshot({
-            owner: sy.owner,
-            baseTokenBalance: new Decimal(sy.amount).round().toNumber(),
-          });
-        }
+      for (const [syOwner, syAmount] of Object.entries(syProportionsMap)) {
+        opts.produceSnapshot({
+          owner: syOwner,
+          baseTokenBalance: syAmount.round().toNumber(),
+        });
       }
     } catch (error) {
       opts.close(error as Error);
