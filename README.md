@@ -33,6 +33,7 @@ $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wf
 $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' exponent-yield-trading EJ4GPTCnNtemBVrT7QKhRfSKfM53aV2UJYGAC8gdVz5b WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ...
 
+$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' ratex-yield-trading 46eiAqS6c96yjefnRiNQ2WXGjvSv7NBhyxc3f4AZZRZa WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute

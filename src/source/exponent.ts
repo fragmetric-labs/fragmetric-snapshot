@@ -2,8 +2,8 @@ import web3 from '@solana/web3.js-1';
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
 import { SourceStreamOptions } from './index';
 import { RPCClient } from '../rpc';
-import { ExponentCore } from './exponent_core_idl';
-import ExponentCoreIDLFile from './exponent_core_idl.json';
+import { ExponentCore } from './exponent_idl';
+import ExponentCoreIDLFile from './exponent_idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
 
@@ -36,16 +36,16 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
     throw new Error('failed to find matched fragmetric receipt token from given input token');
   }
 
+  const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
   const balances = await getBalancesForVault(exponentCoreProgram, market);
 
   process.nextTick(async () => {
     try {
-      const syProportionsMap: {[owner: string]: Decimal} = {}; // owner -> amount map
+      const syProportionsMap: { [owner: string]: Decimal } = {}; // owner -> amount map
       for (const balance of balances.syProportions) {
         syProportionsMap[balance.owner] = new Decimal(balance.amount);
       }
 
-      const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
       for (const yt of balances.ytBalances) {
         const ytAmount = new Decimal(yt.amount);
         const ytValue = ytAmount
