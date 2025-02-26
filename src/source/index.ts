@@ -1,14 +1,16 @@
 import { Readable } from 'stream';
 import { produceOrcaLiquidity } from './orca';
-import { produceKaminoLiquidity } from './kamino';
+import { produceKaminoLiquidity } from './kliquidity';
 import { produceExponentYieldTrading } from './exponent';
 import { produceRateXYieldTrading } from './ratex';
+import { produceKaminoLending } from './klend';
 
 export const sources = [
   'orca-liquidity' as 'orca-liquidity',
   'kamino-liquidity' as 'kamino-liquidity',
   'exponent-yield-trading' as 'exponent-yield-trading',
   'ratex-yield-trading' as 'ratex-yield-trading',
+  'kamino-lending' as 'kamino-lending',
 ];
 
 export type Snapshot = {
@@ -72,6 +74,9 @@ class JSONReadableStream extends Readable {
             break;
           case 'ratex-yield-trading':
             await produceRateXYieldTrading(options);
+            break;
+          case 'kamino-lending':
+            await produceKaminoLending(options);
             break;
           default:
             process.nextTick(() => {
