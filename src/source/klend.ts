@@ -25,38 +25,33 @@ export async function produceKaminoLending(opts: SourceStreamOptions) {
     );
   }
 
-  const obligations = await marketInfo.getAllObligationsByDepositedReserve(reserve);
-  const deposits = obligations.map((obligation) => ({
-    owner: obligation.state.owner,
-    depositAmount: obligation.state.deposits.filter((deposit) =>
-      deposit.depositReserve.equals(reserve),
-    )[0].depositedAmount,
-  }));
-
   const lastUpdatedSlot = reserveInfo.state.lastUpdate.slot;
-  const exchangeRates = marketInfo
-    .getCollateralExchangeRatesByReserve(lastUpdatedSlot.toNumber())
-    .entries();
+  const exchangeRates = marketInfo.getCollateralExchangeRatesByReserve(lastUpdatedSlot.toNumber());
   let exchangeRate: Decimal;
-  for (const _exchangeRate of exchangeRates) {
-    if (_exchangeRate[0].equals(reserve)) {
-      exchangeRate = _exchangeRate[1];
+  for (const [k, v] of exchangeRates) {
+    if (k.equals(reserve)) {
+      exchangeRate = v;
     }
   }
 
+  const obligations = await marketInfo.getAllObligationsByDepositedReserve(reserve);
+
   process.nextTick(() => {
     try {
-      for (const deposit of deposits) {
-        if (deposit.depositAmount == 0) continue;
+      for (const obligation of obligations) {
+        const owner = obligation.state.owner;
+        const collateralAmount = obligation.state.deposits
+          .filter((deposit) => deposit.depositReserve.equals(reserve))
+          .reduce((sum, item) => {
+            return sum.add(new Decimal(item.depositedAmount.toString()));
+          }, new Decimal(0));
 
-        const collateralAmount = deposit.depositAmount.toString();
+        if (collateralAmount.isZero()) continue;
 
-        const snapshot: Snapshot = {
-          owner: deposit.owner.toString(),
-          baseTokenBalance: new Decimal(collateralAmount).div(exchangeRate).floor().toNumber(),
-        };
-
-        opts.produceSnapshot(snapshot);
+        opts.produceSnapshot({
+          owner: owner.toString(),
+          baseTokenBalance: collateralAmount.div(exchangeRate).floor().toNumber(),
+        });
       }
     } catch (error) {
       opts.close(error as Error);
