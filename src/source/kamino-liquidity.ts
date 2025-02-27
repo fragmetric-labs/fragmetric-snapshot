@@ -2,7 +2,7 @@ import web3 from '@solana/web3.js-1';
 import { Kamino } from '@kamino-finance/kliquidity-sdk';
 import { Farms } from '@kamino-finance/farms-sdk';
 import { RPCClient } from '../rpc';
-import {Snapshot, SourceStreamFactory} from './index';
+import { Snapshot, SourceStreamFactory } from './index';
 import Decimal from 'decimal.js';
 
 // args: kamino strategy address, base token mint, other token mint
@@ -121,7 +121,7 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
     }
     opts.close();
   });
-}
+};
 
 function calcTokenAAmountWeight(poolPrice: number, lowerPrice: number, upperPrice: number) {
   if (poolPrice < lowerPrice) {

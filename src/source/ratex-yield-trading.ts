@@ -4,7 +4,7 @@ import { RatexContracts } from './ratex.idl';
 import RatexContractsIDLFile from './ratex.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
-import {Snapshot, SourceStreamFactory} from './index';
+import { Snapshot, SourceStreamFactory } from './index';
 import { RPCClient } from '../rpc';
 import { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
@@ -47,10 +47,8 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
   }
 
   const oracleList = await rateXProgram.account.oracle.all();
-  const oracleRate = oracleList[0].account.rate;
-
-  const receiptTokenDecimals = receiptToken.decimals;
-  const receiptTokenOneTokenAsSOL = new Decimal(oracleRate.toString());
+  const oracleRate = new Decimal(oracleList[0].account.rate.toString());
+  const inputTokenDecimals = receiptToken.decimals;
   const totalAmount = await getTotalDeposits({ rateXProgram, inputToken });
 
   const userStatsList = await rateXProgram.account.userStats.all();
@@ -65,19 +63,22 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
     lpMap.set(lp.publicKey.toBase58(), lp.account);
   }
   const yieldMarketList = await rateXProgram.account.yieldMarket.all();
-  const yieldMarketMap = new Map<string, IdlAccounts<RatexContracts>['yieldMarket']>();
+  const yieldMarketMap = new Map<string | number, IdlAccounts<RatexContracts>['yieldMarket']>();
   for (const yieldMarket of yieldMarketList) {
     yieldMarketMap.set(yieldMarket.publicKey.toBase58(), yieldMarket.account);
+    yieldMarketMap.set(yieldMarket.account.marketIndex, yieldMarket.account);
   }
 
   process.nextTick(async () => {
     try {
       let userTotalAmount = new Decimal(0);
+      let userTotalAmountForTargetYieldMarket = new Decimal(0);
       for (const userStats of userStatsList) {
-        const baseTokenAmount = await calcUserToken({
+        const baseTokenAmount = await calcUserInputToken({
           rateXProgram,
-          receiptTokenOneTokenAsSOL,
-          receiptTokenDecimals,
+          oracleRate,
+          inputTokenDecimals,
+          targetYieldMarket: market,
           accounts: {
             userStats: userStats.account,
             userMap,
@@ -87,13 +88,23 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
         });
         opts.produceSnapshot({
           owner: userStats.account.authority.toBase58(),
-          baseTokenBalance: baseTokenAmount.round().toNumber(),
+          baseTokenBalance: baseTokenAmount.target.toNumber(),
         });
-        userTotalAmount = userTotalAmount.add(baseTokenAmount);
+        userTotalAmount = userTotalAmount.add(baseTokenAmount.target).add(baseTokenAmount.others);
+        userTotalAmountForTargetYieldMarket = userTotalAmountForTargetYieldMarket.add(
+          baseTokenAmount.target,
+        );
       }
+      const totalProtocolFeeAmount = totalAmount.sub(userTotalAmount);
+      const protocolFeeAmountForTargetYieldMarket = !userTotalAmount.isZero()
+        ? totalProtocolFeeAmount
+            .mul(userTotalAmountForTargetYieldMarket)
+            .div(userTotalAmount)
+            .round()
+        : new Decimal(0);
       opts.produceSnapshot({
         owner: rateXProtocolFeeAddress.toBase58(),
-        baseTokenBalance: totalAmount.sub(userTotalAmount).floor().toNumber(),
+        baseTokenBalance: protocolFeeAmountForTargetYieldMarket.toNumber(),
       });
     } catch (error) {
       opts.close(error as Error);
@@ -101,7 +112,7 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
     }
     opts.close();
   });
-}
+};
 
 async function getTotalDeposits({
   rateXProgram,
@@ -126,12 +137,12 @@ async function getTotalDeposits({
   ) {
     let marginIndexBuffer = Buffer.alloc(4);
     marginIndexBuffer.writeUInt32LE(marginIndex);
-    const [marginMarketPda, _] = web3.PublicKey.findProgramAddressSync(
+    const [marginMarketAddress, _] = web3.PublicKey.findProgramAddressSync(
       [Buffer.from('margin_market'), marginIndexBuffer],
       rateXProgram.programId,
     );
     // @ts-ignore
-    const ata = token.getAssociatedTokenAddressSync(inputToken, marginMarketPda, true);
+    const ata = token.getAssociatedTokenAddressSync(inputToken, marginMarketAddress, true);
     const tokenBalanceData = (await rateXProgram.provider.connection.getTokenAccountBalance(ata))
       .value;
     totalDeposits = totalDeposits.add(new Decimal(tokenBalanceData.amount));
@@ -178,28 +189,24 @@ function getTokenAmountsFromLiquidity({
   }
 }
 
-async function calcUserToken({
+async function calcUserInputToken({
   rateXProgram,
-  receiptTokenOneTokenAsSOL,
-  receiptTokenDecimals,
+  oracleRate,
+  inputTokenDecimals,
+  targetYieldMarket,
   accounts,
 }: {
   rateXProgram: Program<RatexContracts>;
-  receiptTokenOneTokenAsSOL: Decimal;
-  receiptTokenDecimals: number;
+  oracleRate: Decimal;
+  inputTokenDecimals: number;
+  targetYieldMarket: web3.PublicKey;
   accounts: {
     userStats: IdlAccounts<RatexContracts>['userStats'];
     userMap: Map<string, IdlAccounts<RatexContracts>['user']>;
     lpMap: Map<string, IdlAccounts<RatexContracts>['lp']>;
-    yieldMarketMap: Map<string, IdlAccounts<RatexContracts>['yieldMarket']>;
+    yieldMarketMap: Map<string | number, IdlAccounts<RatexContracts>['yieldMarket']>;
   };
 }) {
-  let traderMarginAmount = new Decimal(0),
-    traderStAmount = new Decimal(0),
-    traderYtAmount = new Decimal(0),
-    lpStAmount = new Decimal(0),
-    lpYtAmount = new Decimal(0);
-
   const userAddresses: string[] = [],
     lpAddresses: string[] = [];
   for (
@@ -221,6 +228,15 @@ async function calcUserToken({
     lpAddresses.push(lpAddress.toBase58());
   }
 
+  let traderMarginAmount = new Decimal(0);
+  const amountsPerYieldMarket: Array<{
+    yieldMarket: web3.PublicKey;
+    traderStAmount: Decimal;
+    traderYtAmount: Decimal;
+    lpStAmount: Decimal;
+    lpYtAmount: Decimal;
+  }> = [];
+
   for (const userAddress of userAddresses) {
     const user = accounts.userMap.get(userAddress);
     if (!user) {
@@ -231,19 +247,36 @@ async function calcUserToken({
     );
 
     for (const yieldPosition of user.yieldPositions) {
+      if (yieldPosition.marketIndex == 0) continue;
+
+      const yieldMarket = accounts.yieldMarketMap.get(yieldPosition.marketIndex);
+      if (!yieldMarket) {
+        throw new Error(`cannot find the yield market: ${yieldPosition.marketIndex}`);
+      }
       if (yieldPosition.lastRate.toNumber() > 0) {
-        traderYtAmount = traderYtAmount.add(new Decimal(yieldPosition.baseAssetAmount.toString()));
+        let amounts = amountsPerYieldMarket.find((a) => a.yieldMarket.equals(yieldMarket.pubkey));
+        if (!amounts) {
+          amounts = {
+            yieldMarket: yieldMarket.pubkey,
+            traderStAmount: new Decimal(0),
+            traderYtAmount: new Decimal(0),
+            lpStAmount: new Decimal(0),
+            lpYtAmount: new Decimal(0),
+          };
+          amountsPerYieldMarket.push(amounts);
+        }
+        amounts.traderYtAmount = amounts.traderYtAmount.add(
+          new Decimal(yieldPosition.baseAssetAmount.toString()),
+        );
         const quoteAssetAmount = new Decimal(yieldPosition.quoteAssetAmount.toString());
         const rebaseStAmount = quoteAssetAmount.add(
           new Decimal(yieldPosition.baseAssetAmount.toString())
             .add(quoteAssetAmount)
             .mul(
-              receiptTokenOneTokenAsSOL
-                .div(new Decimal(yieldPosition.lastRate.toString()))
-                .sub(new Decimal(1)),
+              oracleRate.div(new Decimal(yieldPosition.lastRate.toString())).sub(new Decimal(1)),
             ),
         );
-        traderStAmount = traderStAmount.add(rebaseStAmount);
+        amounts.traderStAmount = amounts.traderStAmount.add(rebaseStAmount);
       }
     }
   }
@@ -259,11 +292,22 @@ async function calcUserToken({
     const lowerSqrtPrice = Decimal.pow(1.0001, tickLowerIndex / 2).mul(d2_64);
     const tickUpperIndex = ammPosition.tickUpperIndex;
     const upperSqrtPrice = Decimal.pow(1.0001, tickUpperIndex / 2).mul(d2_64);
-    const ammPool = accounts.yieldMarketMap.get(ammPosition.ammpool.toBase58());
-    if (!ammPool) {
-      throw new Error(`cannot find the amm pool: ${ammPosition.ammpool.toBase58()}`);
+    const yieldMarket = accounts.yieldMarketMap.get(ammPosition.ammpool.toBase58());
+    if (!yieldMarket) {
+      throw new Error(`cannot find the yield market: ${ammPosition.ammpool.toBase58()}`);
     }
-    const currentSqrtPrice = ammPool.pool.sqrtPrice;
+    let amounts = amountsPerYieldMarket.find((a) => a.yieldMarket.equals(yieldMarket.pubkey));
+    if (!amounts) {
+      amounts = {
+        yieldMarket: yieldMarket.pubkey,
+        traderStAmount: new Decimal(0),
+        traderYtAmount: new Decimal(0),
+        lpStAmount: new Decimal(0),
+        lpYtAmount: new Decimal(0),
+      };
+      amountsPerYieldMarket.push(amounts);
+    }
+    const currentSqrtPrice = yieldMarket.pool.sqrtPrice;
     const [tokenA, tokenB] = getTokenAmountsFromLiquidity({
       liquidity: new Decimal(liquidity.toString()),
       currentSqrtPrice: new Decimal(currentSqrtPrice.toString()),
@@ -271,15 +315,49 @@ async function calcUserToken({
       upperSqrtPrice: new Decimal(upperSqrtPrice),
       roundUp: true,
     });
-    lpYtAmount = lpYtAmount.add(new Decimal(lp.reserveBaseAmount.toString())).add(tokenA);
-    lpStAmount = lpStAmount.add(new Decimal(lp.reserveQuoteAmount.toString())).add(tokenB);
+    amounts.lpYtAmount = amounts.lpYtAmount
+      .add(new Decimal(lp.reserveBaseAmount.toString()))
+      .add(tokenA);
+    amounts.lpStAmount = amounts.lpStAmount
+      .add(new Decimal(lp.reserveQuoteAmount.toString()))
+      .add(tokenB);
   }
 
-  return traderYtAmount
-    .add(traderStAmount)
-    .add(lpYtAmount)
-    .add(lpStAmount)
-    .mul(Decimal.pow(10, receiptTokenDecimals))
-    .div(receiptTokenOneTokenAsSOL)
-    .add(traderMarginAmount);
+  const result = amountsPerYieldMarket.map((amounts) => {
+    return {
+      yieldMarket: amounts.yieldMarket,
+      inputTokenAmount: amounts.traderYtAmount
+        .add(amounts.traderStAmount)
+        .add(amounts.lpYtAmount)
+        .add(amounts.lpStAmount)
+        .mul(Decimal.pow(10, inputTokenDecimals))
+        .div(oracleRate)
+        .round(),
+    };
+  });
+  if (result.length == 0) {
+    return {
+      target: traderMarginAmount,
+      others: new Decimal(0),
+    };
+  }
+
+  const totalAmount = result.reduce(
+    (amount, item) => amount.add(item.inputTokenAmount),
+    new Decimal(0),
+  );
+  const targetYieldMarketAmount =
+    result.find((item) => item.yieldMarket.equals(targetYieldMarket))?.inputTokenAmount ??
+    new Decimal(0);
+  const target = targetYieldMarketAmount.add(
+    traderMarginAmount
+      .mul(targetYieldMarketAmount)
+      .div(totalAmount.isZero() ? new Decimal(1) : totalAmount)
+      .round(),
+  );
+  const others = totalAmount.add(traderMarginAmount).sub(target);
+  return {
+    target,
+    others,
+  };
 }
