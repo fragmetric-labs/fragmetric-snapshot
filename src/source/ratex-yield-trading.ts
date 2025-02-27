@@ -4,7 +4,7 @@ import { RatexContracts } from './ratex.idl';
 import RatexContractsIDLFile from './ratex.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
-import {Snapshot, SourceStreamFactory} from './index';
+import { Snapshot, SourceStreamFactory } from './index';
 import { RPCClient } from '../rpc';
 import { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
@@ -112,7 +112,7 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
     }
     opts.close();
   });
-}
+};
 
 async function getTotalDeposits({
   rateXProgram,
@@ -346,22 +346,18 @@ async function calcUserInputToken({
     (amount, item) => amount.add(item.inputTokenAmount),
     new Decimal(0),
   );
-  let targetYieldMarketAmount =
+  const targetYieldMarketAmount =
     result.find((item) => item.yieldMarket.equals(targetYieldMarket))?.inputTokenAmount ??
     new Decimal(0);
-  if (!totalAmount.isZero()) {
-    const target = targetYieldMarketAmount.add(
-      traderMarginAmount.mul(targetYieldMarketAmount).div(totalAmount).round(),
-    );
-    const others = totalAmount.add(traderMarginAmount).sub(target);
-    return {
-      target,
-      others,
-    };
-  }
-
+  const target = targetYieldMarketAmount.add(
+    traderMarginAmount
+      .mul(targetYieldMarketAmount)
+      .div(totalAmount.isZero() ? new Decimal(1) : totalAmount)
+      .round(),
+  );
+  const others = totalAmount.add(traderMarginAmount).sub(target);
   return {
-    target: new Decimal(0),
-    others: new Decimal(0),
+    target,
+    others,
   };
 }
