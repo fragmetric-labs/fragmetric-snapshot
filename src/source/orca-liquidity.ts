@@ -1,11 +1,11 @@
 import web3 from '@solana/web3.js-1';
 import * as orca from '@orca-so/whirlpools';
-import { SourceStreamOptions, Snapshot } from './index';
+import {Snapshot, SourceStreamFactory} from './index';
 import { RPCClient } from '../rpc';
 import { logger } from '../logger';
 
 // args: pool address, base token mint, other token mint, [whirlpool config]
-export async function produceOrcaLiquidity(opts: SourceStreamOptions) {
+export const orcaLiquidity: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc); // opts.rpc
 
   const pool = new web3.PublicKey(opts.args[0]);

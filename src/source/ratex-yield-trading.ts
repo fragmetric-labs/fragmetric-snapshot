@@ -1,14 +1,15 @@
 import { web3, Program, AnchorProvider, Wallet, Idl, ProgramAccount } from '@coral-xyz/anchor';
 import * as token from '@solana/spl-token';
-import { RatexContracts } from './ratex_idl';
-import RatexContractsIDLFile from './ratex_idl.json';
+import { RatexContracts } from './ratex.idl';
+import RatexContractsIDLFile from './ratex.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
-import { Snapshot, SourceStreamOptions } from './index';
+import {Snapshot, SourceStreamFactory} from './index';
 import { RPCClient } from '../rpc';
 import { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
-export async function produceRateXYieldTrading(opts: SourceStreamOptions) {
+// args: ratex yield market address, input token mint
+export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
 
   const market = new web3.PublicKey(opts.args[0]);

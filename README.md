@@ -25,15 +25,14 @@ Options:
 
 
 $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' orca-liquidity Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL
-...
 
 $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
-...
 
 $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' exponent-yield-trading EJ4GPTCnNtemBVrT7QKhRfSKfM53aV2UJYGAC8gdVz5b WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
-...
 
 $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' ratex-yield-trading 46eiAqS6c96yjefnRiNQ2WXGjvSv7NBhyxc3f4AZZRZa WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-lending 4pDCUGYftuPG1sV3xcqsn2YGfHC6Q3eZVfDyzQm8SK5A kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B
 ```
 
 ### How to Contribute

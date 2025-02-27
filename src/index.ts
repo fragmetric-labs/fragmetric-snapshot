@@ -14,7 +14,7 @@ program
     '-o, --output <path>',
     'Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock',
   )
-  .argument('source [source-args]', `${sources.join('|')} [source-args]`)
+  .argument('source [source-args]', `${Object.keys(sources).join('|')} [source-args]`)
   .allowExcessArguments(true)
   .showHelpAfterError()
   .parse();

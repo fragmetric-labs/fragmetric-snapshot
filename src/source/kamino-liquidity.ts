@@ -1,12 +1,12 @@
 import web3 from '@solana/web3.js-1';
 import { Kamino } from '@kamino-finance/kliquidity-sdk';
-import { Farms, scaleDownWads } from '@kamino-finance/farms-sdk';
+import { Farms } from '@kamino-finance/farms-sdk';
 import { RPCClient } from '../rpc';
-import { SourceStreamOptions, Snapshot } from './index';
+import {Snapshot, SourceStreamFactory} from './index';
 import Decimal from 'decimal.js';
 
 // args: kamino strategy address, base token mint, other token mint
-export async function produceKaminoLiquidity(opts: SourceStreamOptions) {
+export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
   const kamino = new Kamino(rpc.cluster == 'mainnet' ? 'mainnet-beta' : rpc.cluster, rpc.v1);
   const farms = new Farms(rpc.v1);

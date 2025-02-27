@@ -1,17 +1,17 @@
 import { Readable } from 'stream';
-import { produceOrcaLiquidity } from './orca';
-import { produceKaminoLiquidity } from './kliquidity';
-import { produceExponentYieldTrading } from './exponent';
-import { produceRateXYieldTrading } from './ratex';
-import { produceKaminoLending } from './klend';
+import { orcaLiquidity } from './orca-liquidity';
+import { kaminoLiquidity } from './kamino-liquidity';
+import { exponentYieldTrading } from './exponent-yield-trading';
+import { ratexYieldTrading } from './ratex-yield-trading';
+import { kaminoLending } from './kamino-lending';
 
-export const sources = [
-  'orca-liquidity' as 'orca-liquidity',
-  'kamino-liquidity' as 'kamino-liquidity',
-  'exponent-yield-trading' as 'exponent-yield-trading',
-  'ratex-yield-trading' as 'ratex-yield-trading',
-  'kamino-lending' as 'kamino-lending',
-];
+export const sources = {
+  'orca-liquidity': orcaLiquidity,
+  'kamino-liquidity': kaminoLiquidity,
+  'exponent-yield-trading': exponentYieldTrading,
+  'ratex-yield-trading': ratexYieldTrading,
+  'kamino-lending': kaminoLending,
+};
 
 export type Snapshot = {
   owner: string;
@@ -20,9 +20,11 @@ export type Snapshot = {
 
 export type CreateSourceStreamOptions = {
   rpc: string;
-  source: (typeof sources)[number];
+  source: keyof typeof sources;
   args: string[];
 };
+
+export type SourceStreamFactory = (opts: SourceStreamOptions) => Promise<void>;
 
 export type SourceStreamOptions = CreateSourceStreamOptions & {
   produceSnapshot: (snapshot: Snapshot) => void;
@@ -62,26 +64,11 @@ class JSONReadableStream extends Readable {
 
     this.initialized = new Promise(async (resolve) => {
       try {
-        switch (options.source) {
-          case 'orca-liquidity':
-            await produceOrcaLiquidity(options);
-            break;
-          case 'kamino-liquidity':
-            await produceKaminoLiquidity(options);
-            break;
-          case 'exponent-yield-trading':
-            await produceExponentYieldTrading(options);
-            break;
-          case 'ratex-yield-trading':
-            await produceRateXYieldTrading(options);
-            break;
-          case 'kamino-lending':
-            await produceKaminoLending(options);
-            break;
-          default:
-            process.nextTick(() => {
-              this.destroy(new Error('not supported source: ' + options.source));
-            });
+        const source = sources[options.source];
+        if (source) {
+          await source(options);
+        } else {
+          throw new Error('not supported source: ' + options.source);
         }
       } catch (err) {
         this.destroy(err as Error);
