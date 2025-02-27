@@ -63,6 +63,8 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
     lpMap.set(lp.publicKey.toBase58(), lp.account);
   }
   const yieldMarketList = await rateXProgram.account.yieldMarket.all();
+  const newestYieldMarketIndex = Math.max(...yieldMarketList.map(y => y.account.marketIndex));
+  const newestYieldMarket = yieldMarketList.find(y => y.account.marketIndex == newestYieldMarketIndex)!.publicKey;
   const yieldMarketMap = new Map<string | number, IdlAccounts<RatexContracts>['yieldMarket']>();
   for (const yieldMarket of yieldMarketList) {
     yieldMarketMap.set(yieldMarket.publicKey.toBase58(), yieldMarket.account);
@@ -79,6 +81,7 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
           oracleRate,
           inputTokenDecimals,
           targetYieldMarket: market,
+          newestYieldMarket,
           accounts: {
             userStats: userStats.account,
             userMap,
@@ -194,12 +197,14 @@ async function calcUserInputToken({
   oracleRate,
   inputTokenDecimals,
   targetYieldMarket,
+  newestYieldMarket,
   accounts,
 }: {
   rateXProgram: Program<RatexContracts>;
   oracleRate: Decimal;
   inputTokenDecimals: number;
   targetYieldMarket: web3.PublicKey;
+  newestYieldMarket: web3.PublicKey;
   accounts: {
     userStats: IdlAccounts<RatexContracts>['userStats'];
     userMap: Map<string, IdlAccounts<RatexContracts>['user']>;
@@ -337,7 +342,7 @@ async function calcUserInputToken({
   });
   if (result.length == 0) {
     return {
-      target: traderMarginAmount,
+      target: newestYieldMarket.equals(targetYieldMarket) ? traderMarginAmount : new Decimal(0),
       others: new Decimal(0),
     };
   }
