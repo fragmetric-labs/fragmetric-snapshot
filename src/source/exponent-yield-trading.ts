@@ -1,14 +1,14 @@
 import web3 from '@solana/web3.js-1';
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
-import { SourceStreamOptions } from './index';
+import {SourceStreamFactory} from './index';
 import { RPCClient } from '../rpc';
-import { ExponentCore } from './exponent_idl';
-import ExponentCoreIDLFile from './exponent_idl.json';
+import { ExponentCore } from './exponent.idl';
+import ExponentCoreIDLFile from './exponent.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
 
-// args: exponent market address, input token mint
-export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
+// args: exponent yield market address, input token mint
+export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
 
   const market = new web3.PublicKey(opts.args[0]);
@@ -74,7 +74,7 @@ export async function produceExponentYieldTrading(opts: SourceStreamOptions) {
     }
     opts.close();
   });
-}
+};
 
 interface YtAccount {
   owner: web3.PublicKey;

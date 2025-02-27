@@ -20,12 +20,13 @@
     "index.js"
   ],
   "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
     "@fragmetric-labs/sdk": "^1.0.3",
+    "@kamino-finance/farms-sdk": "^2.4.0",
+    "@kamino-finance/klend-sdk": "^5.10.34",
+    "@kamino-finance/kliquidity-sdk": "^7.0.13",
     "@ledgerhq/hw-app-solana": "^7.2.4",
     "@ledgerhq/hw-transport-node-hid-singleton": "^6.31.5",
-    "@coral-xyz/anchor": "^0.30.1",
-    "@kamino-finance/farms-sdk": "^2.4.0",
-    "@kamino-finance/kliquidity-sdk": "^7.0.13",
     "@orca-so/whirlpools": "^1.0.3",
     "@solana/spl-token": "^0.4.12",
     "@solana/web3.js-1": "npm:@solana/web3.js@^1.98.0",
