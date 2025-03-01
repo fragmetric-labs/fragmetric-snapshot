@@ -63,8 +63,10 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
     lpMap.set(lp.publicKey.toBase58(), lp.account);
   }
   const yieldMarketList = await rateXProgram.account.yieldMarket.all();
-  const newestYieldMarketIndex = Math.max(...yieldMarketList.map(y => y.account.marketIndex));
-  const newestYieldMarket = yieldMarketList.find(y => y.account.marketIndex == newestYieldMarketIndex)!.publicKey;
+  const newestYieldMarketIndex = Math.max(...yieldMarketList.map((y) => y.account.marketIndex));
+  const newestYieldMarket = yieldMarketList.find(
+    (y) => y.account.marketIndex == newestYieldMarketIndex,
+  )!.publicKey;
   const yieldMarketMap = new Map<string | number, IdlAccounts<RatexContracts>['yieldMarket']>();
   for (const yieldMarket of yieldMarketList) {
     yieldMarketMap.set(yieldMarket.publicKey.toBase58(), yieldMarket.account);
@@ -299,7 +301,8 @@ async function calcUserInputToken({
     const upperSqrtPrice = Decimal.pow(1.0001, tickUpperIndex / 2).mul(d2_64);
     const yieldMarket = accounts.yieldMarketMap.get(ammPosition.ammpool.toBase58());
     if (!yieldMarket) {
-      throw new Error(`cannot find the yield market: ${ammPosition.ammpool.toBase58()}`);
+      // throw new Error(`cannot find the yield market: ${ammPosition.ammpool.toBase58()}`);
+      continue;
     }
     let amounts = amountsPerYieldMarket.find((a) => a.yieldMarket.equals(yieldMarket.pubkey));
     if (!amounts) {
