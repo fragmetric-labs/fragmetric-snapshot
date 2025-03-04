@@ -16,30 +16,30 @@ export const nxfinanceLooping: SourceStreamFactory = async (opts) => {
   );
 
   const positions = await nxfinanceProgram.account.position.all();
-  const sSolPositions = positions.filter((position) =>
-    position.account.positions.some((_position) => _position.collateralMint.equals(inputToken)),
-  );
 
   const userCollateralMap = new Map<web3.PublicKey, Decimal>();
-  sSolPositions.forEach((position) => {
-    const owner = position.account.owner;
-    const _sSolPositions = position.account.positions.filter((_position) =>
-      _position.collateralMint.equals(inputToken),
-    );
-    _sSolPositions.forEach((_position) => {
-      const collateralAmount = userCollateralMap.get(owner) || new Decimal(0);
-      userCollateralMap.set(owner, collateralAmount.add(_position.collateralTokens.toString()));
-    });
-  });
 
   process.nextTick(() => {
     try {
-      [...userCollateralMap].forEach(([owner, collateralAmount]) => {
+      for (const position of positions) {
+        const owner = position.account.owner;
+        for (const _position of position.account.positions) {
+          if (_position.collateralMint.equals(inputToken)) {
+            const collateralAmount = userCollateralMap.get(owner) || new Decimal(0);
+            userCollateralMap.set(
+              owner,
+              collateralAmount.add(_position.collateralTokens.toString()),
+            );
+          }
+        }
+      }
+
+      for (const [owner, collateralAmount] of [...userCollateralMap]) {
         opts.produceSnapshot({
           owner: owner.toString(),
           baseTokenBalance: collateralAmount.toNumber(),
         });
-      });
+      }
     } catch (error) {
       opts.close(error as Error);
       return;
