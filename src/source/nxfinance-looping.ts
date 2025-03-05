@@ -5,7 +5,6 @@ import nxfinanceIDLFile from './nxfinance.idl.json';
 import { NxLend } from './nxfinance.idl';
 import Decimal from 'decimal.js';
 
-
 export const nxfinanceLooping: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
   const inputToken = new web3.PublicKey(opts.args[0]);
