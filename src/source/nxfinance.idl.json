@@ -1,5 +1,6 @@
 {
   "address": "NXFiKimQN3QSL3CDhCXddyVmLfrai8HK36bHKaAzK7g",
+  "test_address": "J3ujz6PCJdsrFGtcV6bpvevJJRexnCiDRX3A8hMVtiDY",
   "metadata": {
     "name": "nx_lend",
     "version": "0.1.0",
@@ -2732,24 +2733,36 @@
   ],
   "accounts": [
     {
+      "name": "fragmetricPool",
+      "discriminator": [75, 178, 127, 44, 128, 33, 20, 154]
+    },
+    {
+      "name": "fragmetricUser",
+      "discriminator": [222, 85, 62, 219, 51, 220, 174, 120]
+    },
+    {
+      "name": "fragmetricPosition",
+      "discriminator": [214, 242, 143, 234, 146, 27, 21, 1]
+    },
+    {
       "name": "collateralPool",
-      "discriminator": [153, 1, 163, 22, 159, 181, 167, 192]
+      "discriminator": [186, 4, 253, 240, 93, 243, 212, 195]
     },
     {
       "name": "lendingAccount",
-      "discriminator": [222, 247, 220, 107, 250, 84, 231, 75]
+      "discriminator": [228, 94, 130, 81, 187, 182, 230, 85]
     },
     {
       "name": "lendingPool",
-      "discriminator": [133, 92, 58, 179, 55, 161, 97, 15]
+      "discriminator": [208, 40, 242, 82, 186, 18, 75, 36]
     },
     {
       "name": "leveragePool",
-      "discriminator": [28, 188, 215, 210, 11, 91, 160, 11]
+      "discriminator": [226, 50, 217, 18, 167, 210, 119, 192]
     },
     {
       "name": "nxMarket",
-      "discriminator": [165, 16, 17, 249, 253, 204, 213, 213]
+      "discriminator": [31, 85, 112, 120, 24, 194, 172, 12]
     },
     {
       "name": "position",
@@ -2757,19 +2770,19 @@
     },
     {
       "name": "solayerPool",
-      "discriminator": [176, 9, 239, 43, 75, 236, 171, 169]
+      "discriminator": [101, 192, 39, 191, 52, 165, 70, 246]
     },
     {
       "name": "solayerUser",
-      "discriminator": [250, 222, 249, 242, 97, 13, 156, 140]
+      "discriminator": [230, 46, 112, 244, 139, 118, 68, 192]
     },
     {
       "name": "vSolPool",
-      "discriminator": [190, 15, 227, 51, 3, 161, 188, 83]
+      "discriminator": [74, 76, 252, 13, 207, 128, 65, 218]
     },
     {
       "name": "vSolPosition",
-      "discriminator": [206, 117, 82, 140, 191, 170, 132, 138]
+      "discriminator": [115, 200, 156, 38, 194, 161, 192, 53]
     }
   ],
   "errors": [
@@ -2985,6 +2998,119 @@
     }
   ],
   "types": [
+    {
+      "name": "FragmetricPool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nxMarket",
+            "docs": ["Market's pubkey"],
+            "type": "pubkey"
+          },
+          {
+            "name": "receiptToken",
+            "docs": ["Mint address of wfragSOL"],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": ["Amount of wfragSOL currently held by NX"],
+            "type": "u64"
+          },
+          {
+            "name": "totalNxFragmetricPoints",
+            "docs": ["Total NX fragmetric points 'created'"],
+            "type": "u64"
+          },
+          {
+            "name": "lastUpdateTime",
+            "docs": ["Last timestamp points is updated"],
+            "type": "i64"
+          },
+          {
+            "name": "padding",
+            "type": {
+              "array": ["u64", 10]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FragmetricPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nx_market",
+            "docs": ["Market's pubkey"],
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "docs": ["Data owner"],
+            "type": "pubkey"
+          },
+          {
+            "name": "positions",
+            "docs": ["Record the user's position information list"],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "PositionDetail"
+                }
+              }
+            }
+          },
+          {
+            "name": "swap_temp",
+            "type": {
+              "defined": {
+                "name": "SwapTemp"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FragmetricUser",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nx_market",
+            "docs": ["Market's pubkey"],
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "receipt_token",
+            "docs": ["Mint address of wfragSOL"],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": ["Amount of wfragSOL user has/contributed, can be sum of multiple positions"],
+            "type": "u64"
+          },
+          {
+            "name": "nx_fragmetric_points",
+            "docs": ["Amount of NX Solayer points owned"],
+            "type": "u64"
+          },
+          {
+            "name": "last_update_time",
+            "docs": ["Last timestamp points is updated"],
+            "type": "i64"
+          }
+        ]
+      }
+    },
     {
       "name": "MarketUpdateData",
       "type": {
@@ -3486,6 +3612,9 @@
           },
           {
             "name": "Solayer"
+          },
+          {
+            "name": "Fragmetric"
           }
         ]
       }

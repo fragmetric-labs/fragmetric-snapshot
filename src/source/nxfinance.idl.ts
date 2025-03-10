@@ -2762,6 +2762,18 @@ export type NxLend = {
       discriminator: [162, 191, 156, 34, 151, 131, 65, 140];
     },
     {
+      name: 'fragmetricPosition';
+      discriminator: [162, 191, 156, 34, 151, 131, 65, 140];
+    },
+    {
+      name: 'fragmetricUser';
+      discriminator: [162, 191, 156, 34, 151, 131, 65, 140];
+    },
+    {
+      name: 'fragmetricPool';
+      discriminator: [162, 191, 156, 34, 151, 131, 65, 140];
+    },
+    {
       name: 'solayerPool';
       discriminator: [176, 9, 239, 43, 75, 236, 171, 169];
     },
@@ -3785,6 +3797,80 @@ export type NxLend = {
     },
     {
       name: 'position';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'nxMarket';
+            docs: ["Market's pubkey"];
+            type: 'pubkey';
+          },
+          {
+            name: 'owner';
+            docs: ['Data owner'];
+            type: 'pubkey';
+          },
+          {
+            name: 'positions';
+            docs: ["Record the user's position information list"];
+            type: {
+              vec: {
+                defined: {
+                  name: 'positionDetail';
+                };
+              };
+            };
+          },
+          {
+            name: 'swapTemp';
+            type: {
+              defined: {
+                name: 'swapTemp';
+              };
+            };
+          },
+        ];
+      };
+    },
+    {
+      name: 'fragmetricUser';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'nxMarket';
+            docs: ["Market's pubkey"];
+            type: 'pubkey';
+          },
+          {
+            name: 'owner';
+            type: 'pubkey';
+          },
+          {
+            name: 'receiptToken';
+            docs: ['Mint address of LRT'];
+            type: 'pubkey';
+          },
+          {
+            name: 'amount';
+            docs: ['Amount of LRT user has/contributed, can be sum of multiple positions'];
+            type: 'u64';
+          },
+          {
+            name: 'nxFragmetricPoints';
+            docs: ['Amount of NX Fragmetric points owned'];
+            type: 'u64';
+          },
+          {
+            name: 'lastUpdateTime';
+            docs: ['Last timestamp points is updated'];
+            type: 'i64';
+          },
+        ];
+      };
+    },
+    {
+      name: 'fragmetricPosition';
       type: {
         kind: 'struct';
         fields: [
