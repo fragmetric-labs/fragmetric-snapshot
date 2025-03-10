@@ -4,6 +4,15 @@ import { Snapshot, SourceStreamFactory } from './index';
 import { RPCClient } from '../rpc';
 import { logger } from '../logger';
 
+const ignoringPositionOwnersByPools: { [poolAddress: string]: string[] } = {
+  '5xfKkFmhzNhHKTFUkh4PJmHSWB6LpRvhJcUMKzPP6md2': [
+    'Efg7ieou9wNpMULsQdvuqEwTMNaCiGBkoytBmEFnjNoC', // Kamino wfragSOL:jitoSOL
+  ],
+  Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY: [
+    'C64K8RytjyWuLZuL5LvzDKMC6C2XaK6FD69v79eRHJDC', // Kamino wfragJTO:JTO
+  ],
+};
+
 // args: pool address, base token mint, other token mint, [whirlpool config]
 export const orcaLiquidity: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc); // opts.rpc
@@ -32,6 +41,8 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
 
   const positionsInfo = await orca.fetchPositionsInWhirlpool(rpc.v2, pool.toString() as any);
   logger.info(`pool total positions: ${positionsInfo.length}`);
+
+  const ignoringPositionOwners = new Set(ignoringPositionOwnersByPools[pool.toString()] ?? []);
 
   // now initialization phase finished, begin streaming
   process.nextTick(async () => {
@@ -65,6 +76,11 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
           })();
         const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
         if (!positionTokenAccount) continue;
+
+        // ignore Kamino vaults
+        if (ignoringPositionOwners.has(positionTokenAccount)) {
+          continue;
+        }
 
         const snapshot: Snapshot = {
           owner: positionTokenAccount,

@@ -71,9 +71,14 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
         const tokenAAmount = kaminoLiquidityTokenAAmount.mul(holderShareRatio).toNumber();
         const tokenBAmount = kaminoLiquidityTokenBAmount.mul(holderShareRatio).toNumber();
 
+        // this maps to orca snapshot's owner, so you can filter the kamino liquidity provider at orca pool
+        // console.log({
+        //   owner: holder.holderPubkey.toString(),
+        //   positionOwner: strategyInfo.baseVaultAuthority,
+        // });
+
         const snapshot: Snapshot = {
           owner: holder.holderPubkey.toString(),
-          // positionOwner: strategyInfo.baseVaultAuthority, // this maps to orca snapshot's owner, so you can filter the kamino liquidity provider at orca pool
           baseTokenBalance: calcBaseTokenBalance(
             poolTokenA,
             poolTokenB,
