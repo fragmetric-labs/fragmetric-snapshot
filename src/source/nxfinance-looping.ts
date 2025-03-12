@@ -6,10 +6,10 @@ import { NxLend } from './nxfinance.idl';
 import Decimal from 'decimal.js';
 // import crypto from 'crypto';
 
-// args: nx market address, base token mint
+// args: nxfinance fragmetric pool address, input token mint
 export const nxfinanceLooping: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
-  const market = new web3.PublicKey(opts.args[0]);
+  const fragmetricPool = new web3.PublicKey(opts.args[0]);
   const inputToken = new web3.PublicKey(opts.args[1]);
 
   const nxfinanceProgram = new Program(
@@ -17,13 +17,20 @@ export const nxfinanceLooping: SourceStreamFactory = async (opts) => {
     new AnchorProvider(rpc.v1, new Wallet(new web3.Keypair())),
   );
 
+  const fragmetricPoolAccount = await nxfinanceProgram.account.fragmetricPool.fetch(fragmetricPool);
+  if (!fragmetricPoolAccount.receiptToken.equals(inputToken)) {
+    throw 'unmatched pool account and input token';
+  }
   const userAccounts = await nxfinanceProgram.account.fragmetricUser.all();
 
   process.nextTick(() => {
     try {
       for (const userAccount of userAccounts) {
         const user = userAccount.account;
-        if (user.nxMarket.equals(market) && user.receiptToken.equals(inputToken)) {
+        if (
+          user.nxMarket.equals(fragmetricPoolAccount.nxMarket) &&
+          user.receiptToken.equals(inputToken)
+        ) {
           const amount = new Decimal(user.amount.toString());
           if (!amount.isZero()) {
             opts.produceSnapshot({

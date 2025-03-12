@@ -1,6 +1,6 @@
 {
   "address": "NXFiKimQN3QSL3CDhCXddyVmLfrai8HK36bHKaAzK7g",
-  "test_address": "J3ujz6PCJdsrFGtcV6bpvevJJRexnCiDRX3A8hMVtiDY",
+  "address_test": "J3ujz6PCJdsrFGtcV6bpvevJJRexnCiDRX3A8hMVtiDY",
   "metadata": {
     "name": "nx_lend",
     "version": "0.1.0",

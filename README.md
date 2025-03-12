@@ -34,7 +34,7 @@ $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' ratex-yield-trading 46eiAqS6c
 
 $ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' kamino-lending 4pDCUGYftuPG1sV3xcqsn2YGfHC6Q3eZVfDyzQm8SK5A kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B
 
-$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' nxfinance-looping DbJWoq7RoKYb9iMrGvGoXyaYwBLWKdXHpt9T6N5EzSJ7 WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot --rpc '<RPC-URL>' nxfinance-looping 2CJYeiTcXZdbNCfVJBVF2Jfrui8iQxbLhgfhUTgbpg2S WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute

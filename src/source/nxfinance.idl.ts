@@ -3907,6 +3907,39 @@ export type NxLend = {
       };
     },
     {
+      name: 'fragmetricPool';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'nxMarket';
+            docs: ["Market's pubkey"];
+            type: 'pubkey';
+          },
+          {
+            name: 'receiptToken';
+            docs: ['Mint address of LRT'];
+            type: 'pubkey';
+          },
+          {
+            name: 'amount';
+            docs: ['Amount of LRT currently held by NX'];
+            type: 'u64';
+          },
+          {
+            name: 'totalNxFragmetricPoints';
+            docs: ["Total NX Fragmetric points 'created'"];
+            type: 'u64';
+          },
+          {
+            name: 'lastUpdateTime';
+            docs: ['Last timestamp points is updated'];
+            type: 'i64';
+          },
+        ];
+      };
+    },
+    {
       name: 'solayerPool';
       type: {
         kind: 'struct';
