@@ -1,7 +1,7 @@
 import fs from 'fs';
 import net from 'net';
 import { Writable } from 'stream';
-import { logger } from './logger';
+import { logger } from '../../logger';
 
 export type CreateOutputStreamOptions = {
   path: string;

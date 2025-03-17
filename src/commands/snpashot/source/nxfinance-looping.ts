@@ -1,6 +1,6 @@
 import { AnchorProvider, Program, Wallet, web3 } from '@coral-xyz/anchor';
-import { SourceStreamFactory } from '.';
-import { RPCClient } from '../rpc';
+import { SourceStreamFactory } from './index';
+import { RPCClient } from '../../../rpc';
 import nxfinanceIDLFile from './nxfinance.idl.json';
 import { NxLend } from './nxfinance.idl';
 import Decimal from 'decimal.js';

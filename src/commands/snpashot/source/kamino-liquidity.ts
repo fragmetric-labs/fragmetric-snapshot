@@ -1,7 +1,7 @@
 import web3 from '@solana/web3.js-1';
 import { Kamino } from '@kamino-finance/kliquidity-sdk';
 import { Farms } from '@kamino-finance/farms-sdk';
-import { RPCClient } from '../rpc';
+import { RPCClient } from '../../../rpc';
 import { Snapshot, SourceStreamFactory } from './index';
 import Decimal from 'decimal.js';
 

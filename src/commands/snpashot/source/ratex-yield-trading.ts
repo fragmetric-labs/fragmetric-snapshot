@@ -5,7 +5,7 @@ import RatexContractsIDLFile from './ratex.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
 import { Snapshot, SourceStreamFactory } from './index';
-import { RPCClient } from '../rpc';
+import { RPCClient } from '../../../rpc';
 import { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
 // args: ratex yield market address, input token mint

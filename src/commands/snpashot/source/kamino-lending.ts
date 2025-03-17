@@ -4,8 +4,8 @@ import {
   DEFAULT_RECENT_SLOT_DURATION_MS,
   KaminoMarket,
 } from '@kamino-finance/klend-sdk';
-import { Snapshot, SourceStreamFactory } from '.';
-import { RPCClient } from '../rpc';
+import { Snapshot, SourceStreamFactory } from './index';
+import { RPCClient } from '../../../rpc';
 import Decimal from 'decimal.js';
 
 // args: kamino reserve address, base token mint
