@@ -1,7 +1,7 @@
 import web3 from '@solana/web3.js-1';
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
 import { SourceStreamFactory } from './index';
-import { RPCClient } from '../rpc';
+import { RPCClient } from '../../../rpc';
 import { ExponentCore } from './exponent.idl';
 import ExponentCoreIDLFile from './exponent.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';

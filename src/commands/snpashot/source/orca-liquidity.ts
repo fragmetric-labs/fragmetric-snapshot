@@ -1,8 +1,8 @@
 import web3 from '@solana/web3.js-1';
 import * as orca from '@orca-so/whirlpools';
 import { Snapshot, SourceStreamFactory } from './index';
-import { RPCClient } from '../rpc';
-import { logger } from '../logger';
+import { RPCClient } from '../../../rpc';
+import { logger } from '../../../logger';
 
 const ignoringPositionOwnersByPools: { [poolAddress: string]: string[] } = {
   '5xfKkFmhzNhHKTFUkh4PJmHSWB6LpRvhJcUMKzPP6md2': [
