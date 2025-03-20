@@ -2904,7 +2904,7 @@ export type NxLend = {
     {
       code: 6022;
       name: 'invalidOracle';
-      msg: 'Invalid pool oracle';
+      msg: 'Invalid pool crank-switchboard-feed';
     },
     {
       code: 6023;
