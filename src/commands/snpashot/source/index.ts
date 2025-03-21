@@ -25,6 +25,7 @@ export type CreateSourceStreamOptions = {
   rpc: string;
   source: keyof typeof sources;
   args: string[];
+  date: string;
 };
 
 export type SourceStreamFactory = (opts: SourceStreamOptions) => Promise<void>;

@@ -16,6 +16,7 @@ export const snapshotCommand = new Command()
   .description('CLI to take arbitrary onchain snapshots for Fragmetric platform')
   .option('-s, --silent', 'Turn off stdout logging')
   .option('-r, --rpc <url>', 'Solana RPC URL')
+  .option('-d, --date <date>', 'target snapshot date (YYYY-MM-DD)')
   .option(
     '-o, --output <path>',
     'Output path: - (stdout), ./fragmetric-snapshot.json, /tmp/fragmetric-snapshot.sock',
@@ -41,6 +42,7 @@ export const snapshotCommand = new Command()
         rpc: options.rpc,
         source: options.source as any,
         args: options.sourceArgs,
+        date: rawOptions.date,
       }),
     ])
       .then(([outputStream, sourceStream]) => {

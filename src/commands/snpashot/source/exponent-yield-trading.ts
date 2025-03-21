@@ -6,6 +6,8 @@ import { ExponentCore } from './exponent.idl';
 import ExponentCoreIDLFile from './exponent.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
+import {logger} from "../../../logger";
+import * as string_decoder from "node:string_decoder";
 
 // args: exponent yield market address, input token mint
 export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
@@ -38,6 +40,30 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
 
   const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
   const balances = await getBalancesForVault(exponentCoreProgram, market);
+
+  /* --------------------------------------------------------------- */
+  logger.info(opts);
+  const ytUsers = balances.ytBalances.map((balance) => balance.owner)
+  const syUsers = balances.syProportions.map((balance) => balance.owner)
+  const users = [...new Set([...ytUsers, ...syUsers])];
+  const chunkList = chunkArray(users, 10);  // avoid to Too Many Requests
+  const userBalanceOfDate = [];
+
+  for (const chunk of chunkList) {
+    const chunkRes = await Promise.all(chunk.map(
+      async (user) => getUserBalanceOfDate(user, opts.date)
+    ))
+    userBalanceOfDate.push(...chunkRes)
+    await new Promise(resolve => setTimeout(resolve, 5000)); //sleep 5s
+  }
+
+  balances.ytBalances = userBalanceOfDate
+    .map((row) => row.yt)
+    .filter((row) => row != null);
+  balances.syProportions = userBalanceOfDate
+    .map((row) => row.sy)
+    .filter((row) => row != null);
+  /* --------------------------------------------------------------- */
 
   process.nextTick(async () => {
     try {
@@ -232,4 +258,51 @@ function calculateSyProportionFromLp({
   lpSupply: bigint;
 }) {
   return (lpBalance * marketLiquditySy) / lpSupply;
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
+async function getUserBalanceOfDate(
+  owner: string,
+  date: string,
+) {
+  const historyResponse = await fetch(`https://xpon-json-api-prod-650968662509.europe-west3.run.app/api/user-balance-history/${owner}/DYpJrbeHuoY33VXmYN7uo87e8aepatZyDS46j8cPscsN`)
+  if (! historyResponse.ok) {
+    logger.error(`Failed to fetch user balance history: ${owner}`);
+    throw new Error(`Failed to fetch user balance history: ${historyResponse.statusText}`);
+  }
+
+  const history = (await historyResponse.json()) as { data: Array<{
+    vaultAddress: string;
+    balance: number;
+    tokenType: "LP" | "YT";
+    createdAt: string;  // ISO string
+  }>};
+  const lpBalance = history.data.find(
+    (row) => (
+      row.tokenType === 'LP' && (row.createdAt.startsWith(`${date}T22`) || row.createdAt.startsWith(`${date}T23`))
+    )
+  );
+  const sy = lpBalance ? {
+    owner,
+    amount: lpBalance.balance.toString(),
+  } : undefined
+
+  const ytBalance = history.data.find(
+    (row) => (
+      row.tokenType === 'YT' && (row.createdAt.startsWith(`${date}T22`) || row.createdAt.startsWith(`${date}T23`))
+    )
+  );
+  const yt = ytBalance ? {
+    owner,
+    amount: ytBalance.balance.toString(),
+  } : undefined
+
+  return { sy, yt };
 }
