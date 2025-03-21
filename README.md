@@ -41,7 +41,7 @@ $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' nxfinance-looping 9w
 $ pnpm install
 ...
 
-$ pnpm start --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpm start snapshot --rpc '<RPC-URL>' orca-liquidity 7FcvD7B7GZKJjNUuRAX8exMkMkHPsptwFrqhtLf5c4rf ezSoL6fY1PVdJcJsUpe5CM3xkfmy3zoVCABybm5WtiC J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 ...
 
 $ pnpm build && npm publish --access public --tag dev

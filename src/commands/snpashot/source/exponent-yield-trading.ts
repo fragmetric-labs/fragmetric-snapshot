@@ -98,7 +98,7 @@ async function getYtAccounts({
   const expirationDate = new Date(expirationTs * 1000);
 
   return ytAccounts.reduce((acc: YtAccount[], a) => {
-    if (currentDate < expirationDate) {
+    if (currentDate < expirationDate && a.account.vault.equals(vaultAddress)) {
       acc.push({
         owner: a.account.owner,
         ytBalance: BigInt(a.account.ytBalance.toString()),
@@ -119,18 +119,24 @@ async function getMintYt({
     { memcmp: { offset: 40, bytes: mintSy.toBase58() } },
   ]);
 
-  return vaults.map(async (v) => {
-    const mintInfo = await exponentCoreProgram.provider.connection.getAccountInfo(v.account.mintYt);
-    if (!mintInfo) throw new Error('Mint not found');
+  return Promise.all(
+    vaults
+      .filter((v) => v.account.mintSy.equals(mintSy))
+      .map(async (v) => {
+        const mintInfo = await exponentCoreProgram.provider.connection.getAccountInfo(
+          v.account.mintYt,
+        );
+        if (!mintInfo) throw new Error('Mint not found');
 
-    const data = Buffer.from(mintInfo.data);
-    const decimals = data[44];
+        const data = Buffer.from(mintInfo.data);
+        const decimals = data[44];
 
-    return {
-      mintYt: v.account.mintYt,
-      decimals,
-    };
-  });
+        return {
+          mintYt: v.account.mintYt,
+          decimals,
+        };
+      }),
+  ).then((res) => res[0]);
 }
 
 export async function getBalancesForVault(
@@ -167,14 +173,10 @@ export async function getBalancesForVault(
         lpSupply: marketData.lpSupply,
       }).toString(),
     })),
-    mintYt: (
-      await Promise.all(
-        await getMintYt({
-          exponentCoreProgram,
-          mintSy: marketData.mintSy,
-        }),
-      )
-    )[0],
+    mintYt: await getMintYt({
+      exponentCoreProgram,
+      mintSy: marketData.mintSy,
+    }),
   };
 }
 
@@ -212,10 +214,12 @@ async function getLpAccounts({
     { memcmp: { offset: 40, bytes: marketAddress.toBase58() } },
   ]);
 
-  return lpPositionAccounts.map((a) => ({
-    owner: a.account.owner,
-    lpBalance: BigInt(a.account.lpBalance.toString()),
-  }));
+  return lpPositionAccounts
+    .filter((a) => a.account.market.equals(marketAddress))
+    .map((a) => ({
+      owner: a.account.owner,
+      lpBalance: BigInt(a.account.lpBalance.toString()),
+    }));
 }
 
 function calculateSyProportionFromLp({
