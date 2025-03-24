@@ -1,15 +1,10 @@
-import {Command} from "commander";
-import {
-  AnchorUtils,
-  asV0Tx,
-  getDefaultQueue,
-  PullFeed,
-} from "@switchboard-xyz/on-demand";
-import {CrossbarClient} from "@switchboard-xyz/common";
-import { PublicKey } from "@solana/web3.js-1";
-import {logger} from "../../logger";
+import { Command } from 'commander';
+import { AnchorUtils, asV0Tx, getDefaultQueue, PullFeed } from '@switchboard-xyz/on-demand';
+import { CrossbarClient } from '@switchboard-xyz/common';
+import { PublicKey } from '@solana/web3.js-1';
+import { logger } from '../../logger';
 
-const DEFAULT_KEYPAIR_PATH = "/tmp/solana-keypair.json";
+const DEFAULT_KEYPAIR_PATH = '/tmp/solana-keypair.json';
 
 export const crankSwitchBoardFeedCommand = new Command()
   .name('crank-switchboard-feed')
@@ -24,14 +19,19 @@ export const crankSwitchBoardFeedCommand = new Command()
   .showHelpAfterError()
   .action(async (poolAddress: string, feedAddress: string, options, cmd) => {
     logger.level = !!options.silent ? 'error' : 'debug';
-    logger.info('crank-switchboard-feed', {poolAddress, feedAddress, options, version: cmd.parent?.version()});
+    logger.info('crank-switchboard-feed', {
+      poolAddress,
+      feedAddress,
+      options,
+      version: cmd.parent?.version(),
+    });
 
     const rpc: string = options.rpc!;
     const keypairPath: string = options.keypairPath!;
     const chain: string = options.chain!;
     const network: 'devnet' | 'mainnet' = options.network!;
 
-    const queue = await getDefaultQueue(rpc)
+    const queue = await getDefaultQueue(rpc);
     const program = queue.program;
     const connection = program.provider.connection;
     const payer = await AnchorUtils.initKeypairFromFile(keypairPath);
@@ -45,11 +45,15 @@ export const crankSwitchBoardFeedCommand = new Command()
       throw new Error(`Feed "${feedAddress}" is not initialized`);
     }
 
-    const [pullIx, _, __, luts] = await pullFeed.fetchUpdateIx({
-      crossbarClient,
-      chain,
-      network,
-    }, false, payer.publicKey);
+    const [pullIx, _, __, luts] = await pullFeed.fetchUpdateIx(
+      {
+        crossbarClient,
+        chain,
+        network,
+      },
+      false,
+      payer.publicKey,
+    );
 
     const tx = await asV0Tx({
       connection,
@@ -60,18 +64,21 @@ export const crankSwitchBoardFeedCommand = new Command()
       lookupTables: luts,
     });
 
-    const latestBlockHash = await connection.getLatestBlockhash("confirmed");
+    const latestBlockHash = await connection.getLatestBlockhash('confirmed');
 
     const sig = await connection.sendTransaction(tx, {
-      preflightCommitment: "processed",
+      preflightCommitment: 'processed',
       skipPreflight: false,
     });
 
-    const isConfirmed = await connection.confirmTransaction({
-      signature: sig,
-      blockhash: latestBlockHash.blockhash,
-      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    }, "confirmed");
+    const isConfirmed = await connection.confirmTransaction(
+      {
+        signature: sig,
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      },
+      'confirmed',
+    );
 
     if (isConfirmed) {
       logger.info(`Transaction ${sig} confirmed`);

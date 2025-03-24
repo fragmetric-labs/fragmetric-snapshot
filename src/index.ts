@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { snapshotCommand } from './commands/snpashot';
-import { crankSwitchBoardFeedCommand } from "./commands/crank-switchboard-feed";
+import { crankSwitchBoardFeedCommand } from './commands/crank-switchboard-feed';
 
 const program = new Command();
 
