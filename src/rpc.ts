@@ -44,21 +44,27 @@ export class RPCClient {
         logger.warn(msg);
         throw new Error(msg);
       }
-      return res.json();
+      const result = await res.json();
+      if (result?.error?.message.includes('Method not found')) {
+        logger.warn(`NFT mint ${mintAddress} owner not found`, result);
+        return null;
+      }
+      return result;
     });
 
-    if (data.error) {
+    if (data?.error) {
       const msg = `rpc server error: ${data.error.message ?? JSON.stringify(data.error)}`;
       logger.error(`rpc server error`, { ...data });
       throw new Error(msg);
     }
-    for (const tokenAccount of data.result.token_accounts) {
-      if (tokenAccount.amount == 1) {
-        return tokenAccount.owner;
+    if (data?.result.token_accounts) {
+      for (const tokenAccount of data.result.token_accounts) {
+        if (tokenAccount.amount == 1) {
+          return tokenAccount.owner;
+        }
       }
+      logger.warn(`NFT mint ${mintAddress} owner not found`);
     }
-
-    logger.warn(`NFT mint ${mintAddress} owner not found`);
     return null;
   }
 

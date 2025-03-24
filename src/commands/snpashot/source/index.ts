@@ -5,6 +5,7 @@ import { exponentYieldTrading } from './exponent-yield-trading';
 import { ratexYieldTrading } from './ratex-yield-trading';
 import { kaminoLending } from './kamino-lending';
 import { nxfinanceLooping } from './nxfinance-looping';
+import { logger } from '../../../logger';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -50,9 +51,13 @@ class JSONReadableStream extends Readable {
   private constructor(opts: CreateSourceStreamOptions) {
     super({ objectMode: true });
 
+    let totalBaseTokenBalance = 0n;
+    let snapshotCount = 0;
     const options: SourceStreamOptions = {
       ...opts,
       produceSnapshot: (snapshot) => {
+        totalBaseTokenBalance += BigInt(snapshot.baseTokenBalance);
+        snapshotCount++;
         this.push(JSON.stringify(snapshot) + '\n');
       },
       close: (err) => {
@@ -60,6 +65,12 @@ class JSONReadableStream extends Readable {
           this.destroy(err);
         } else {
           this.push(null);
+          process.on('exit', () => {
+            logger.info({
+              totalBaseTokenBalance,
+              snapshotCount,
+            });
+          });
         }
       },
     };
