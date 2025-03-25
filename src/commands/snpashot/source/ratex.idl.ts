@@ -3639,7 +3639,7 @@ export type RatexContracts = {
     {
       code: 6009;
       name: 'invalidRate';
-      msg: 'Invalid crank-switchboard-feed rate';
+      msg: 'Invalid oracle rate';
     },
     {
       code: 6010;
@@ -3969,22 +3969,22 @@ export type RatexContracts = {
     {
       code: 6075;
       name: 'invalidOracleAccount';
-      msg: 'Invalid crank-switchboard-feed account';
+      msg: 'Invalid oracle account';
     },
     {
       code: 6076;
       name: 'unableToLoadOracleAccount';
-      msg: 'Unable to load crank-switchboard-feed account';
+      msg: 'Unable to load oracle account';
     },
     {
       code: 6077;
       name: 'couldNotLoadOracleData';
-      msg: 'could not load crank-switchboard-feed data';
+      msg: 'could not load oracle data';
     },
     {
       code: 6078;
       name: 'oracleWrongMutability';
-      msg: 'wrong crank-switchboard-feed mutablility';
+      msg: 'wrong oracle mutablility';
     },
     {
       code: 6079;
@@ -5943,7 +5943,7 @@ export type RatexContracts = {
           },
           {
             name: 'oracle';
-            docs: ['the quote asset crank-switchboard-feed'];
+            docs: ['the quote asset oracle'];
             type: 'pubkey';
           },
           {
