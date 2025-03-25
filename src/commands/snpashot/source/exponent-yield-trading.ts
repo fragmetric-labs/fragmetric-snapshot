@@ -7,7 +7,9 @@ import ExponentCoreIDLFile from './exponent.idl.json';
 import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
 import {logger} from "../../../logger";
-import * as string_decoder from "node:string_decoder";
+import * as path from "path";
+import * as fs from "fs";
+import { parse } from "csv-parse";
 
 // args: exponent yield market address, input token mint
 export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
@@ -46,23 +48,110 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
   const ytUsers = balances.ytBalances.map((balance) => balance.owner)
   const syUsers = balances.syProportions.map((balance) => balance.owner)
   const users = [...new Set([...ytUsers, ...syUsers])];
-  const chunkList = chunkArray(users, 10);  // avoid to Too Many Requests
-  const userBalanceOfDate = [];
 
-  for (const chunk of chunkList) {
-    const chunkRes = await Promise.all(chunk.map(
-      async (user) => getUserBalanceOfDate(user, opts.date)
-    ))
-    userBalanceOfDate.push(...chunkRes)
-    await new Promise(resolve => setTimeout(resolve, 5000)); //sleep 5s
-  }
+  const CHUNK_SIZE = 10;
+  const chunkList = chunkArray(users, CHUNK_SIZE);  // avoid to Too Many Requests
+  let userBalanceOfDate: any[] = [];
+  let errorUserList: string[] = [];
+
+  let results = await getUsersBalanceOfDateCsv(opts.date, balances.marketData);
+  results = (function (results) {
+    const filteredUsersMap: { [owner: string]: any } = {}; // owner -> {sy, yt} map
+
+    for (const result of results) {
+      if (result.sy) {
+        const owner = result.sy.owner;
+        if (!filteredUsersMap[owner]) {
+          filteredUsersMap[owner] = {};
+        }
+        filteredUsersMap[owner].sy = result.sy;
+      }
+      if (result.yt) {
+        const owner = result.yt.owner;
+        if (!filteredUsersMap[owner]) {
+          filteredUsersMap[owner] = {};
+        }
+        filteredUsersMap[owner].yt = result.yt;
+      }
+    }
+
+    return Object.values(filteredUsersMap);
+  })(results);
+  userBalanceOfDate = userBalanceOfDate.concat(results);
+
+  // for api call
+  // let loopIndex = 0;
+  // for (const chunk of chunkList) {
+  //   const userBalanceOfDataLengthBef = userBalanceOfDate.length;
+  //   const errorUserListLengthBef = errorUserList.length;
+
+  //   for (const user of chunk) {
+  //     try {
+  //       const result = await getUserBalanceOfDate(user, opts.date, balances.marketData);
+  //       userBalanceOfDate.push(result);
+
+  //       // check value
+  //       // const owner = result.sy?.owner
+  //       //   ? result.sy.owner
+  //       //   : result.yt?.owner
+  //       //     ? result.yt.owner
+  //       //     : undefined;
+  //       // const isOwnerMatch = result.sy?.owner
+  //       //   ? result.sy.owner == owner
+  //       //   : result.yt?.owner
+  //       //     ? result.yt.owner == owner
+  //       //     : false;
+  //       // if (isOwnerMatch) {
+  //       //   console.log(`user ${owner} in balances - yt: ${balances.ytBalances.filter(balance => balance.owner == owner)[0].amount}, sy: ${balances.syProportions.filter(balance => balance.owner == owner)[0].amount}`);
+  //       //   console.log(`> user ${owner} in api call - yt: ${result.yt?.amount}, sy: ${result.sy?.amount}`);
+  //       // }
+  //     } catch (err: any) {
+  //       const errorUser = err.message.split(" ")[0];
+  //       if (errorUser.length < 43) continue; // if it's not publickey then skip
+  //       errorUserList.push(errorUser);
+  //     }
+  //   }
+
+  //   console.log(`userBalanceOfDate length ${userBalanceOfDate.length}, +${userBalanceOfDate.length - userBalanceOfDataLengthBef}\n errorUserList length ${errorUserList.length}, +${errorUserList.length - errorUserListLengthBef}`);
+
+  //   loopIndex++;
+
+  //   // await new Promise(resolve => setTimeout(resolve, 3000)); //sleep 3s
+  // }
+
+  // let errorLoopIndex = 0;
+  // while (errorUserList.length > 0) {
+  //   let userBalanceOfDataLengthBef = userBalanceOfDate.length;
+  //   let errorUserListLengthBef = errorUserList.length;
+  //   console.log(`starting error loop ${errorLoopIndex}, errorUserList length ${errorUserListLengthBef}`);
+
+  //   let chunkLen = errorUserList.length > CHUNK_SIZE ? CHUNK_SIZE : errorUserList.length;
+  //   const chunk = errorUserList.splice(0, chunkLen);
+
+  //   for (const user of chunk) {
+  //     try {
+  //       const result = await getUserBalanceOfDate(user, opts.date, balances.marketData);
+  //       userBalanceOfDate.push(result);
+  //     } catch (err: any) {
+  //       const errorUser = err.message.split(" ")[0];
+  //       if (errorUser.length < 43) continue; // if it's not publickey then skip
+  //       errorUserList.push(errorUser);
+  //     }
+  //   }
+
+  //   console.log(`ending error loop ${errorLoopIndex}, userBalanceOfDate length ${userBalanceOfDate.length}, changed +${userBalanceOfDate.length - userBalanceOfDataLengthBef}\n errorUserList length ${errorUserList.length}, changed -${errorUserListLengthBef - errorUserList.length}`);
+
+  //   errorLoopIndex++;
+
+  //   // await new Promise(resolve => setTimeout(resolve, 3000)); //sleep 3s
+  // }
 
   balances.ytBalances = userBalanceOfDate
     .map((row) => row.yt)
-    .filter((row) => row != null);
+    .filter((row) => row != null && row != undefined);
   balances.syProportions = userBalanceOfDate
     .map((row) => row.sy)
-    .filter((row) => row != null);
+    .filter((row) => row != null && row != undefined);
   /* --------------------------------------------------------------- */
 
   process.nextTick(async () => {
@@ -203,6 +292,7 @@ export async function getBalancesForVault(
       exponentCoreProgram,
       mintSy: marketData.mintSy,
     }),
+    marketData,
   };
 }
 
@@ -268,14 +358,69 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return result;
 }
 
+async function getUsersBalanceOfDateCsv(
+  date: string,
+  marketData: any,
+) {  
+  return new Promise((resolve, reject) => {
+    const results: any[] = [];
+    // create a readable stream and pipe it to the CSV parser.
+    fs.createReadStream(path.join(__dirname, "../../../../tmp/user_balance_history_0317_0319.csv"))
+      .pipe(
+        parse({
+          columns: true,
+          trim: true,
+        })
+      )
+      .on("data", (row: {
+        id: string;
+        user_address: string;
+        vault_address: string;
+        token_type: string;
+        balance: string;
+        created_at: string;
+        balance_usd_value: string;
+      }) => {
+        const lpBalance = row.token_type == "LP" && (row.created_at.startsWith(`${date} 22`) || row.created_at.startsWith(`${date} 23`)) ? row.balance : undefined;
+
+        const sy = lpBalance ? {
+          owner: row.user_address,
+          amount: calculateSyProportionFromLp({
+            lpBalance: BigInt(lpBalance),
+            marketLiquditySy: marketData.syBalance,
+            lpSupply: marketData.lpSupply,
+          }).toString(),
+        } : undefined;
+
+        const ytBalance = row.token_type == "YT" && (row.created_at.startsWith(`${date} 22`) || row.created_at.startsWith(`${date} 23`)) ? row.balance : undefined;
+
+        const yt = ytBalance ? {
+          owner: row.user_address,
+          amount: ytBalance,
+        } : undefined;
+
+        if (sy || yt) {
+          results.push({ sy, yt });
+        }
+      })
+      .on("end", () => {
+        resolve(results);
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+  });
+}
+
 async function getUserBalanceOfDate(
   owner: string,
   date: string,
+  marketData: any,
 ) {
-  const historyResponse = await fetch(`https://xpon-json-api-prod-650968662509.europe-west3.run.app/api/user-balance-history/${owner}/DYpJrbeHuoY33VXmYN7uo87e8aepatZyDS46j8cPscsN`)
-  if (! historyResponse.ok) {
+  const historyResponse = await fetch(`https://xpon-json-api-prod-650968662509.europe-west3.run.app/api/user-balance-history/${owner}/DYpJrbeHuoY33VXmYN7uo87e8aepatZyDS46j8cPscsN`);
+  if (!historyResponse.ok) {
     logger.error(`Failed to fetch user balance history: ${owner}`);
-    throw new Error(`Failed to fetch user balance history: ${historyResponse.statusText}`);
+    throw new Error(`${owner} Failed to fetch user balance history: ${historyResponse.statusText}`);
   }
 
   const history = (await historyResponse.json()) as { data: Array<{
@@ -284,6 +429,7 @@ async function getUserBalanceOfDate(
     tokenType: "LP" | "YT";
     createdAt: string;  // ISO string
   }>};
+
   const lpBalance = history.data.find(
     (row) => (
       row.tokenType === 'LP' && (row.createdAt.startsWith(`${date}T22`) || row.createdAt.startsWith(`${date}T23`))
@@ -291,7 +437,11 @@ async function getUserBalanceOfDate(
   );
   const sy = lpBalance ? {
     owner,
-    amount: lpBalance.balance.toString(),
+    amount: calculateSyProportionFromLp({
+      lpBalance: BigInt(lpBalance.balance),
+      marketLiquditySy: marketData.syBalance,
+      lpSupply: marketData.lpSupply,
+    }).toString(),
   } : undefined
 
   const ytBalance = history.data.find(
