@@ -6,6 +6,7 @@ import { ratexYieldTrading } from './ratex-yield-trading';
 import { kaminoLending } from './kamino-lending';
 import { nxfinanceLooping } from './nxfinance-looping';
 import { logger } from '../../../logger';
+import { banxLooping } from './banx-looping';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -14,6 +15,7 @@ export const sources = {
   'ratex-yield-trading': ratexYieldTrading,
   'kamino-lending': kaminoLending,
   'nxfinance-looping': nxfinanceLooping,
+  'banx-looping': banxLooping,
 };
 
 export type Snapshot = {
@@ -39,7 +41,6 @@ export function createSourceStream(opts: CreateSourceStreamOptions): Promise<Rea
 }
 
 class JSONReadableStream extends Readable {
-  private intervalId: any;
   private readonly initialized: Promise<boolean>;
 
   public static async create(opts: CreateSourceStreamOptions) {
@@ -93,12 +94,5 @@ class JSONReadableStream extends Readable {
 
   _read() {
     // no-op
-  }
-
-  _destroy(error: Error | null, callback: (error?: Error | null) => void) {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-    callback(error);
   }
 }
