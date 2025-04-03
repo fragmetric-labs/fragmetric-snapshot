@@ -25,7 +25,7 @@ export const banxLooping: SourceStreamFactory = async (opts) => {
         const account = wfragsolFraktBond.account;
         opts.produceSnapshot({
           owner: account.fbondIssuer.toString(),
-          baseTokenBalance: account.fbondTokenSupply.toString(),
+          baseTokenBalance: account.fbondTokenSupply.toNumber(),
         });
       }
     } catch (error) {
