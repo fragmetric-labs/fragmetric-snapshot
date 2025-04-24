@@ -39,6 +39,8 @@ $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' banx-looping 5c8BxBT
 $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' soon-bridge PMST7CMBeJubWwhieuTvjgyEEwH8FLdNorZdvMJ3aVA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
 $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' texture-lending C7a3AjWTvWxf9GSppTcB2E74waveZKNkVYLFFhjr4Uy2 WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' loopscale-lending 7n5F6vLutwTPuVju9t4ZC22vHyJNyGbHKzaokdyWycjy WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute
