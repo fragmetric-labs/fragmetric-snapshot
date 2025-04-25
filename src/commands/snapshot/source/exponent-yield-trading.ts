@@ -12,8 +12,6 @@ import {
 import Decimal from 'decimal.js';
 import AmmImpl from '@meteora-ag/dynamic-amm-sdk';
 
-const testUser = new web3.PublicKey('91zBeWL8kHBaMtaVrHwWsck1UacDKvje82QQ3HE2k8mJ');
-
 const EXPONENT_METEORA_MARKET_ADDRS = [
   'GZ5ZaP3D9qSQ4R4ob2NPP7TXEnjZmYgN916NGvr8gg16', // Exponent MLP wfragSOL-JitoSOL DAMM pool
   '5dzopBMvCi6U3CpC9SdjE88A2gQT4ZgKPrjRZnaoPRV2', // Exponent MLP wfragJTO-JTO DAMM pool
@@ -60,9 +58,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
       const syProportionsMap: { [owner: string]: Decimal } = {}; // owner -> amount map
       for (const balance of balances.syProportions) {
         syProportionsMap[balance.owner] = new Decimal(balance.amount);
-        if (balance.owner == testUser.toString()) {
-          console.log(`My syProportion:`, syProportionsMap[balance.owner]);
-        }
       }
 
       if (!isMeteoraMarket({ market })) {
@@ -73,9 +68,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
             .mul(Decimal.pow(10, 2 * receiptToken.decimals - balances.mintYt.decimals))
             .div(receiptTokenOneTokenAsSOL)
             .floor();
-          if (yt.owner == testUser.toString()) {
-            console.log(`My yt amount ${ytAmount}, yt value: ${ytValue}`);
-          }
 
           const syValue = syProportionsMap[yt.owner] ?? new Decimal(0);
           delete syProportionsMap[yt.owner];
@@ -96,9 +88,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
         for (const yt of balances.ytBalances) {
           const ytAmount = new Decimal(yt.amount);
           const ytValue = ytAmount.div(dammPool.poolInfo.virtualPrice).floor();
-          if (yt.owner == testUser.toString()) {
-            console.log(`My yt amount ${ytAmount}, yt value: ${ytValue}`);
-          }
 
           const syValue = syProportionsMap[yt.owner] ?? new Decimal(0);
           delete syProportionsMap[yt.owner];
@@ -110,9 +99,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
           const withdrawQuoteBothTokens = dammPool.getWithdrawQuote(new BN(mlpAmount), 0);
 
           if (tokenA.address.toString() == inputToken.toString()) {
-            // const withdrawQuoteOneToken = dammPool.getWithdrawQuote(new BN(mlpAmount), 0, tokenA.address);
-            // console.log(`${yt.owner} withdrawQuoteBothTokens:`, withdrawQuoteBothTokens, `withdrawQuoteOneToken:`, withdrawQuoteOneToken);
-
             for (const fragmetricRestakingClient of fragmetricRestakingClients) {
               supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
                 (asset) => asset.mint?.equals(tokenB.address),
@@ -127,7 +113,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
 
             opts.produceSnapshot({
               owner: yt.owner.toString(),
-              // baseTokenBalance: withdrawQuoteOneToken.tokenAOutAmount.toNumber(),
               // tokenB -> tokenA
               baseTokenBalance: new Decimal(withdrawQuoteBothTokens.tokenAOutAmount.toString())
                 .add(
@@ -138,9 +123,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
                 .toNumber(),
             });
           } else if (tokenB.address.toString() == inputToken.toString()) {
-            // const withdrawQuoteOneToken = dammPool.getWithdrawQuote(new BN(mlpAmount), 0, tokenB.address);
-            // console.log(`${yt.owner} withdrawQuoteBothTokens:`, withdrawQuoteBothTokens, `withdrawQuoteOneToken:`, withdrawQuoteOneToken);
-
             for (const fragmetricRestakingClient of fragmetricRestakingClients) {
               supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
                 (asset) => asset.mint?.equals(tokenA.address),
@@ -155,7 +137,6 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
 
             opts.produceSnapshot({
               owner: yt.owner.toString(),
-              // baseTokenBalance: withdrawQuoteOneToken.tokenBOutAmount.toNumber(),
               // tokenA -> tokenB
               baseTokenBalance: new Decimal(withdrawQuoteBothTokens.tokenBOutAmount.toString())
                 .add(
