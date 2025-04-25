@@ -15,11 +15,12 @@ import AmmImpl from '@meteora-ag/dynamic-amm-sdk';
 const testUser = new web3.PublicKey('91zBeWL8kHBaMtaVrHwWsck1UacDKvje82QQ3HE2k8mJ');
 
 const EXPONENT_METEORA_MARKET_ADDRS = [
-  '6tc1ytukQv94YMt1G2c8NBAi7njJD6sHKUx8R68gMtXu', // Exponent MLP USDC-USDT DAMM pool - mainnet
+  'GZ5ZaP3D9qSQ4R4ob2NPP7TXEnjZmYgN916NGvr8gg16', // Exponent MLP wfragSOL-JitoSOL DAMM pool
+  '5dzopBMvCi6U3CpC9SdjE88A2gQT4ZgKPrjRZnaoPRV2', // Exponent MLP wfragJTO-JTO DAMM pool
 ];
 const METEORA_DAMM_POOL_ADDR: Record<string, string> = {
-  WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U: '', // wfragSOL : Meteora wfragSOL-JitoSOL DAMM pool
-  WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR: '', // wfragJTO : Meteora wfragJTO-JTO DAMM pool
+  WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U: 'iMTNY8mkASoED5kmGFrmbJXmV4GpWuhn92JRYGEMUuV', // wfragSOL : Meteora wfragSOL-JitoSOL DAMM pool
+  WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR: 'AZnMR3v5VvAFtVTLQGwEcgAZxim1E8wYmDunDp9FyKRd', // wfragJTO : Meteora wfragJTO-JTO DAMM pool
 };
 
 // args: exponent yield market address, input token mint
@@ -116,6 +117,7 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
               supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
                 (asset) => asset.mint?.equals(tokenB.address),
               );
+              if (supportedAsset) break;
             }
             if (!supportedAsset) {
               throw new Error('failed to find matched fragmetric supported token from given token');
@@ -143,6 +145,7 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
               supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
                 (asset) => asset.mint?.equals(tokenA.address),
               );
+              if (supportedAsset) break;
             }
             if (!supportedAsset) {
               throw new Error('failed to find matched fragmetric supported token from given token');
