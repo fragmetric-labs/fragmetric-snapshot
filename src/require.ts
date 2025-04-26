@@ -20,6 +20,10 @@ const web3jsV1DependantsPattern = new RegExp(
     '@orca-so/whirlpool-sdk',
     '@orca-so/whirlpool-client-sdk',
     '@hubbleprotocol/hubble-config',
+    '@meteora-ag',
+    '@mercurial-finance',
+    '@metaplex-foundation',
+    '@solana/buffer-layout-utils',
   ]
     .map((token) => token.replace(/[@/]/g, '\\$&'))
     .join('|'),

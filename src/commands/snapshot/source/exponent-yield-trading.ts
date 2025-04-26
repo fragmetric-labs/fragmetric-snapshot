@@ -1,11 +1,25 @@
 import web3 from '@solana/web3.js-1';
-import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
+import { AnchorProvider, Program, Wallet, BN } from '@coral-xyz/anchor';
 import { SourceStreamFactory } from './index';
 import { RPCClient } from '../../../rpc';
 import { ExponentCore } from './exponent.idl';
 import ExponentCoreIDLFile from './exponent.idl.json';
-import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
+import {
+  RestakingClient,
+  RestakingFundReceiptToken,
+  RestakingFundSupportedAsset,
+} from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
+import AmmImpl from '@meteora-ag/dynamic-amm-sdk';
+
+const EXPONENT_METEORA_MARKET_ADDRS = [
+  'GZ5ZaP3D9qSQ4R4ob2NPP7TXEnjZmYgN916NGvr8gg16', // Exponent MLP wfragSOL-JitoSOL DAMM pool
+  '5dzopBMvCi6U3CpC9SdjE88A2gQT4ZgKPrjRZnaoPRV2', // Exponent MLP wfragJTO-JTO DAMM pool
+];
+const METEORA_DAMM_POOL_ADDR: Record<string, string> = {
+  WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U: 'iMTNY8mkASoED5kmGFrmbJXmV4GpWuhn92JRYGEMUuV', // wfragSOL : Meteora wfragSOL-JitoSOL DAMM pool
+  WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR: 'AZnMR3v5VvAFtVTLQGwEcgAZxim1E8wYmDunDp9FyKRd', // wfragJTO : Meteora wfragJTO-JTO DAMM pool
+};
 
 // args: exponent yield market address, input token mint
 export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
@@ -46,20 +60,96 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
         syProportionsMap[balance.owner] = new Decimal(balance.amount);
       }
 
-      for (const yt of balances.ytBalances) {
-        const ytAmount = new Decimal(yt.amount);
-        const ytValue = ytAmount
-          .mul(Decimal.pow(10, 2 * receiptToken.decimals - balances.mintYt.decimals))
-          .div(receiptTokenOneTokenAsSOL)
-          .floor();
+      if (!isMeteoraMarket({ market })) {
+        // then it's normal exponent
+        for (const yt of balances.ytBalances) {
+          const ytAmount = new Decimal(yt.amount);
+          const ytValue = ytAmount
+            .mul(Decimal.pow(10, 2 * receiptToken.decimals - balances.mintYt.decimals))
+            .div(receiptTokenOneTokenAsSOL)
+            .floor();
 
-        const syValue = syProportionsMap[yt.owner] ?? new Decimal(0);
-        delete syProportionsMap[yt.owner];
+          const syValue = syProportionsMap[yt.owner] ?? new Decimal(0);
+          delete syProportionsMap[yt.owner];
 
-        opts.produceSnapshot({
-          owner: yt.owner.toString(),
-          baseTokenBalance: ytValue.plus(syValue).round().toNumber(),
-        });
+          opts.produceSnapshot({
+            owner: yt.owner.toString(),
+            baseTokenBalance: ytValue.plus(syValue).round().toNumber(),
+          });
+        }
+      } else {
+        // then it would be meteora's
+        const dammPoolAddr = new web3.PublicKey(METEORA_DAMM_POOL_ADDR[inputToken.toString()]);
+        const dammPool = await AmmImpl.create(rpc.v1, dammPoolAddr);
+
+        const tokenA = dammPool.tokenAMint;
+        const tokenB = dammPool.tokenBMint;
+
+        for (const yt of balances.ytBalances) {
+          const ytAmount = new Decimal(yt.amount);
+          const ytValue = ytAmount.div(dammPool.poolInfo.virtualPrice).floor();
+
+          const syValue = syProportionsMap[yt.owner] ?? new Decimal(0);
+          delete syProportionsMap[yt.owner];
+
+          const mlpAmount = ytValue.plus(syValue).round().toNumber();
+
+          // MLP -> wfrag token amount
+          let supportedAsset: RestakingFundSupportedAsset | undefined = undefined;
+          const withdrawQuoteBothTokens = dammPool.getWithdrawQuote(new BN(mlpAmount), 0);
+
+          if (tokenA.address.toString() == inputToken.toString()) {
+            for (const fragmetricRestakingClient of fragmetricRestakingClients) {
+              supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
+                (asset) => asset.mint?.equals(tokenB.address),
+              );
+              if (supportedAsset) break;
+            }
+            if (!supportedAsset) {
+              throw new Error('failed to find matched fragmetric supported token from given token');
+            }
+
+            const tokenBOneTokenAsSol = new Decimal(supportedAsset.oneTokenAsSOL.toString());
+
+            opts.produceSnapshot({
+              owner: yt.owner.toString(),
+              // tokenB -> tokenA
+              baseTokenBalance: new Decimal(withdrawQuoteBothTokens.tokenAOutAmount.toString())
+                .add(
+                  new Decimal(withdrawQuoteBothTokens.tokenBOutAmount.toString())
+                    .mul(tokenBOneTokenAsSol.div(receiptTokenOneTokenAsSOL))
+                    .floor(),
+                )
+                .toNumber(),
+            });
+          } else if (tokenB.address.toString() == inputToken.toString()) {
+            for (const fragmetricRestakingClient of fragmetricRestakingClients) {
+              supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
+                (asset) => asset.mint?.equals(tokenA.address),
+              );
+              if (supportedAsset) break;
+            }
+            if (!supportedAsset) {
+              throw new Error('failed to find matched fragmetric supported token from given token');
+            }
+
+            const tokenAOneTokenAsSol = new Decimal(supportedAsset.oneTokenAsSOL.toString());
+
+            opts.produceSnapshot({
+              owner: yt.owner.toString(),
+              // tokenA -> tokenB
+              baseTokenBalance: new Decimal(withdrawQuoteBothTokens.tokenBOutAmount.toString())
+                .add(
+                  new Decimal(withdrawQuoteBothTokens.tokenAOutAmount.toString())
+                    .mul(tokenAOneTokenAsSol.div(receiptTokenOneTokenAsSOL))
+                    .floor(),
+                )
+                .toNumber(),
+            });
+          } else {
+            throw new Error('invalid meteora pool');
+          }
+        }
       }
 
       for (const [syOwner, syAmount] of Object.entries(syProportionsMap)) {
@@ -75,6 +165,10 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
     opts.close();
   });
 };
+
+function isMeteoraMarket({ market }: { market: web3.PublicKey }) {
+  return EXPONENT_METEORA_MARKET_ADDRS.includes(market.toString());
+}
 
 interface YtAccount {
   owner: web3.PublicKey;
