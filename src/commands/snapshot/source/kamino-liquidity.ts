@@ -1,24 +1,29 @@
-import web3 from '@solana/web3.js-1';
+import * as web3 from '@solana/web3.js';
 import { Kamino } from '@kamino-finance/kliquidity-sdk';
 import { Farms } from '@kamino-finance/farms-sdk';
 import { RPCClient } from '../../../rpc';
 import { Snapshot, SourceStreamFactory } from './index';
 import Decimal from 'decimal.js';
+import { Address } from '@solana/kit';
 
 // args: kamino strategy address, base token mint, other token mint
 export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
-  const kamino = new Kamino(rpc.cluster == 'mainnet' ? 'mainnet-beta' : rpc.cluster, rpc.v1);
-  const farms = new Farms(rpc.v1);
+  const kamino = new Kamino(
+    rpc.cluster == 'mainnet' ? 'mainnet-beta' : rpc.cluster,
+    rpc.v2,
+    rpc.v1,
+  );
+  const farms = new Farms(rpc.v2);
 
-  const strategy = new web3.PublicKey(opts.args[0]);
-  const tokenMintA = new web3.PublicKey(opts.args[1]);
-  const tokenMintB = new web3.PublicKey(opts.args[2]);
-  const baseTokenMint = tokenMintA.toString(); // we should determine which token would be base token at the pool
+  const strategy = opts.args[0] as Address;
+  const tokenMintA = opts.args[1] as Address;
+  const tokenMintB = opts.args[2] as Address;
+  const baseTokenMint = tokenMintA; // we should determine which token would be base token at the pool
 
   const strategyInfo = await kamino.getStrategyByAddress(strategy);
   if (!strategyInfo) {
-    throw new Error('kamino strategy info not found: ' + strategy.toString());
+    throw new Error('kamino strategy info not found: ' + strategy);
   }
 
   const poolInfo = (await kamino.getOrcaPoolsForTokens(tokenMintA, tokenMintB)).filter(
@@ -27,7 +32,7 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
   const poolTokenA = poolInfo.tokenA.mint;
   const poolTokenB = poolInfo.tokenB.mint;
 
-  const poolPrice = await kamino.getOrcaPoolPrice(new web3.PublicKey(poolInfo.address));
+  const poolPrice = await kamino.getOrcaPoolPrice(poolInfo.address as Address);
 
   const kaminoPosition = (await kamino.getOrcaPositions([strategyInfo.position]))[0];
   if (!kaminoPosition) {
@@ -46,14 +51,14 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
   const farmState = (await farms.getAllFarmStatesByPubkeys([strategyInfo.farm]))[0];
   const farmUsers = await farms.getAllUserStatesForFarm(strategyInfo.farm);
 
-  const sharesMintSupply = await rpc.getTokenSupply(strategyInfo.sharesMint);
+  const sharesMintSupply = await rpc.getTokenSupply(new web3.PublicKey(strategyInfo.sharesMint));
   const sharesTotal = new Decimal(sharesMintSupply.amount).div(
     Decimal.pow(10, sharesMintSupply.decimals),
   );
 
   const sharesHolders = await kamino.getStrategyHolders(strategy);
-  const farmShareHolder = sharesHolders.find((holder) =>
-    holder.holderPubkey.equals(farmState.farmState.farmVaultsAuthority),
+  const farmShareHolder = sharesHolders.find(
+    (holder) => holder.holderPubkey == farmState.farmState.farmVaultsAuthority,
   );
   const farmShareRatio = sharesTotal.isZero()
     ? new Decimal(0)
@@ -73,12 +78,12 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
 
         // this maps to orca snapshot's owner, so you can filter the kamino liquidity provider at orca pool
         // console.log({
-        //   owner: holder.holderPubkey.toString(),
+        //   owner: holder.holderPubkey,
         //   positionOwner: strategyInfo.baseVaultAuthority,
         // });
 
         const snapshot: Snapshot = {
-          owner: holder.holderPubkey.toString(),
+          owner: holder.holderPubkey,
           baseTokenBalance: calcBaseTokenBalance(
             poolTokenA,
             poolTokenB,

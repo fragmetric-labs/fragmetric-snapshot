@@ -1,4 +1,4 @@
-import web3 from '@solana/web3.js-1';
+import * as web3 from '@solana/web3.js';
 import {
   getSingleReserve,
   DEFAULT_RECENT_SLOT_DURATION_MS,

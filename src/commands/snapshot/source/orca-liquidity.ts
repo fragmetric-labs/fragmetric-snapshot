@@ -1,4 +1,4 @@
-import web3 from '@solana/web3.js-1';
+import * as web3 from '@solana/web3.js';
 import * as orca from '@orca-so/whirlpools';
 import { Snapshot, SourceStreamFactory } from './index';
 import { RPCClient } from '../../../rpc';
@@ -6,10 +6,13 @@ import { logger } from '../../../logger';
 
 const ignoringPositionOwnersByPools: { [poolAddress: string]: string[] } = {
   '5xfKkFmhzNhHKTFUkh4PJmHSWB6LpRvhJcUMKzPP6md2': [
-    'Efg7ieou9wNpMULsQdvuqEwTMNaCiGBkoytBmEFnjNoC', // Kamino wfragSOL:jitoSOL
+    'Efg7ieou9wNpMULsQdvuqEwTMNaCiGBkoytBmEFnjNoC', // Kamino wfragSOL-jitoSOL base authority
   ],
   Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY: [
-    'C64K8RytjyWuLZuL5LvzDKMC6C2XaK6FD69v79eRHJDC', // Kamino wfragJTO:JTO
+    'C64K8RytjyWuLZuL5LvzDKMC6C2XaK6FD69v79eRHJDC', // Kamino wfragJTO-JTO base authority
+  ],
+  H6gUYo94dMyhaT4Zm94DRSuH931atRcdAVdMCu3aAwze: [
+    'GenZuEkdpyWZ1WwEsehUZQAtcsLfztRtoW7yV3XY9uBo', // Kamino wfragBTC-zBTC base authority
   ],
 };
 

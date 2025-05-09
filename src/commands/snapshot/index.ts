@@ -1,4 +1,3 @@
-import '../../require';
 import { Command } from 'commander';
 import { logger } from '../../logger';
 import { createSourceStream } from './source';
@@ -13,7 +12,7 @@ export type ProgramOptions = {
 
 export const snapshotCommand = new Command()
   .name('snapshot')
-  .description('CLI to take arbitrary onchain snapshots for Fragmetric platform')
+  .description('take DeFi snapshots')
   .option('-s, --silent', 'Turn off stdout logging')
   .option('-r, --rpc <url>', 'Solana RPC URL')
   .option(
@@ -25,7 +24,8 @@ export const snapshotCommand = new Command()
   .showHelpAfterError()
   .action(async (args: string[], rawOptions, cmd) => {
     const options: ProgramOptions = {
-      rpc: rawOptions.rpc || 'https://api.mainnet-beta.solana.com',
+      rpc:
+        rawOptions.rpc || process.env.SOLANA_RPC_MAINNET || 'https://api.mainnet-beta.solana.com',
       output: rawOptions.output || '-',
       source: args[0] || '',
       sourceArgs: args.slice(1),

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { AnchorUtils, asV0Tx, getDefaultQueue, PullFeed } from '@switchboard-xyz/on-demand';
 import { CrossbarClient } from '@switchboard-xyz/common';
-import { PublicKey } from '@solana/web3.js-1';
+import * as web3 from '@solana/web3.js';
 import { logger } from '../../logger';
 
 const DEFAULT_KEYPAIR_PATH = '/tmp/solana-keypair.json';
@@ -37,7 +37,7 @@ export const crankSwitchBoardFeedCommand = new Command()
     const payer = await AnchorUtils.initKeypairFromFile(keypairPath);
     const crossbarClient = CrossbarClient.default();
 
-    const pullFeed = new PullFeed(program, new PublicKey(feedAddress));
+    const pullFeed = new PullFeed(program, new web3.PublicKey(feedAddress));
 
     const initialized = await pullFeed.isInitializedAsync();
 
