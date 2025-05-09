@@ -16,27 +16,30 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
   );
   const farms = new Farms(rpc.v2);
 
-  const strategy = opts.args[0] as Address;
+  const strategyAddress = opts.args[0] as Address;
   const tokenMintA = opts.args[1] as Address;
   const tokenMintB = opts.args[2] as Address;
   const baseTokenMint = tokenMintA; // we should determine which token would be base token at the pool
 
-  const strategyInfo = await kamino.getStrategyByAddress(strategy);
-  if (!strategyInfo) {
-    throw new Error('kamino strategy info not found: ' + strategy);
+  const strategy = await kamino.getStrategyByAddress(strategyAddress);
+  if (!strategy) {
+    throw new Error('kamino strategy not found: ' + strategyAddress);
   }
+  const poolTokenA = strategy.tokenAMint;
+  const poolTokenB = strategy.tokenBMint;
+  if (
+    !(
+      (tokenMintA == poolTokenA && tokenMintB == poolTokenB) ||
+      (tokenMintA == poolTokenB && tokenMintB == poolTokenA)
+    )
+  ) {
+    throw new Error(`pool token pair is invalid: ${poolTokenA}/${poolTokenB}`);
+  }
+  const poolPrice = await kamino.getOrcaPoolPrice(strategy.pool);
 
-  const poolInfo = (await kamino.getOrcaPoolsForTokens(tokenMintA, tokenMintB)).filter(
-    (pool) => pool.address == strategyInfo.pool.toString(),
-  )[0];
-  const poolTokenA = poolInfo.tokenA.mint;
-  const poolTokenB = poolInfo.tokenB.mint;
-
-  const poolPrice = await kamino.getOrcaPoolPrice(poolInfo.address as Address);
-
-  const kaminoPosition = (await kamino.getOrcaPositions([strategyInfo.position]))[0];
+  const kaminoPosition = (await kamino.getOrcaPositions([strategy.position]))[0];
   if (!kaminoPosition) {
-    throw new Error('kamino position info not found');
+    throw new Error('kamino position not found');
   }
   const kaminoLiquidity = new Decimal(kaminoPosition.liquidity.toString());
   const lowerPrice = 1.0001 ** kaminoPosition.tickLowerIndex;
@@ -48,15 +51,15 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
     calcTokenBAmountWeight(poolPrice.toNumber(), lowerPrice, upperPrice),
   );
 
-  const farmState = (await farms.getAllFarmStatesByPubkeys([strategyInfo.farm]))[0];
-  const farmUsers = await farms.getAllUserStatesForFarm(strategyInfo.farm);
+  const farmState = (await farms.getAllFarmStatesByPubkeys([strategy.farm]))[0];
+  const farmUsers = await farms.getAllUserStatesForFarm(strategy.farm);
 
-  const sharesMintSupply = await rpc.getTokenSupply(new web3.PublicKey(strategyInfo.sharesMint));
+  const sharesMintSupply = await rpc.getTokenSupply(new web3.PublicKey(strategy.sharesMint));
   const sharesTotal = new Decimal(sharesMintSupply.amount).div(
     Decimal.pow(10, sharesMintSupply.decimals),
   );
 
-  const sharesHolders = await kamino.getStrategyHolders(strategy);
+  const sharesHolders = await kamino.getStrategyHolders(strategyAddress);
   const farmShareHolder = sharesHolders.find(
     (holder) => holder.holderPubkey == farmState.farmState.farmVaultsAuthority,
   );
