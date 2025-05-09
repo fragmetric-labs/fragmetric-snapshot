@@ -11,7 +11,7 @@
 $ pnpx @fragmetric-labs/snapshot@latest --help
 Usage: fragmetric-snapshot [options] [command]
 
-CLI to take defi snapshot or crank oracle feeds
+CLI to take defi snapshot
 
 Options:
   -V, --version                 output the version number
