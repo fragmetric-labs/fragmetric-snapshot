@@ -76,9 +76,15 @@ async function getTokenAccountsOfMint(
 
 export const soonBridge: SourceStreamFactory = async (opts) => {
   const bridgePool = new web3.PublicKey(opts.args[0]);
+  const inputToken = new web3.PublicKey(opts.args[1]);
   if (!bridgePool.equals(new web3.PublicKey('PMST7CMBeJubWwhieuTvjgyEEwH8FLdNorZdvMJ3aVA'))) {
     throw new Error(
       `invalid input address: ${bridgePool.toString()} is not a valid bridge pool address`,
+    );
+  }
+  if (!inputToken.equals(new web3.PublicKey('WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U'))) {
+    throw new Error(
+      `invalid input address: ${inputToken.toString()} is not a valid wfragSOL mint address`,
     );
   }
 
