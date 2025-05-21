@@ -21,6 +21,7 @@
   ],
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
+    "@coral-xyz/anchor-29": "npm:@coral-xyz/anchor@0.29.0",
     "@fragmetric-labs/sdk": "^1.0.3",
     "@kamino-finance/farms-sdk": "^2.4.0",
     "@kamino-finance/klend-sdk": "^5.10.34",
