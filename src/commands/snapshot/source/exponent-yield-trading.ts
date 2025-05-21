@@ -1,14 +1,10 @@
-import web3 from '@solana/web3.js-1';
+import * as web3 from '@solana/web3.js';
 import { AnchorProvider, Program, Wallet, BN } from '@coral-xyz/anchor';
 import { SourceStreamFactory } from './index';
 import { RPCClient } from '../../../rpc';
 import { ExponentCore } from './exponent.idl';
 import ExponentCoreIDLFile from './exponent.idl.json';
-import {
-  RestakingClient,
-  RestakingFundReceiptToken,
-  RestakingFundSupportedAsset,
-} from '@fragmetric-labs/sdk';
+import { RestakingProgram } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
 import AmmImpl from '@meteora-ag/dynamic-amm-sdk';
 
@@ -33,24 +29,31 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
     new AnchorProvider(rpc.v1, new Wallet(web3.Keypair.generate())),
   );
 
-  const fragmetricRestakingClients = await RestakingClient.createAll({
+  const restaking = RestakingProgram.connect({
     cluster: rpc.cluster,
-    connection: rpc.v1,
+    rpc: rpc.v2 as any,
+    rpcSubscriptions: null as any,
   });
-
-  let receiptToken: RestakingFundReceiptToken | null = null;
-  for (const fragmetricRestakingClient of fragmetricRestakingClients) {
-    const currentReceiptToken = await fragmetricRestakingClient.state.receiptToken();
-    if (currentReceiptToken.wrappedTokenMint?.equals(inputToken)) {
-      receiptToken = currentReceiptToken;
+  let receiptToken = restaking.fragSOL;
+  switch (inputToken.toString()) {
+    case 'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U':
+      receiptToken = restaking.fragSOL;
       break;
-    }
+    case 'WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR':
+      receiptToken = restaking.fragJTO;
+      break;
+    case 'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm':
+      receiptToken = restaking.fragBTC;
+      break;
   }
-  if (!receiptToken) {
+  if ((await receiptToken.wrappedTokenMint.resolveAddress()) != inputToken.toString()) {
     throw new Error('failed to find matched fragmetric receipt token from given input token');
   }
+  await receiptToken.resolve();
 
-  const receiptTokenOneTokenAsSOL = new Decimal(receiptToken.oneTokenAsSOL.toString());
+  const receiptTokenOneTokenAsSOL = new Decimal(
+    receiptToken.fund.account!.data.oneReceiptTokenAsSol.toString(),
+  );
   const balances = await getBalancesForVault(exponentCoreProgram, market);
 
   process.nextTick(async () => {
@@ -65,7 +68,9 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
         for (const yt of balances.ytBalances) {
           const ytAmount = new Decimal(yt.amount);
           const ytValue = ytAmount
-            .mul(Decimal.pow(10, 2 * receiptToken.decimals - balances.mintYt.decimals))
+            .mul(
+              Decimal.pow(10, 2 * receiptToken.account!.data.decimals - balances.mintYt.decimals),
+            )
             .div(receiptTokenOneTokenAsSOL)
             .floor();
 
@@ -80,6 +85,7 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
       } else {
         // then it would be meteora's
         const dammPoolAddr = new web3.PublicKey(METEORA_DAMM_POOL_ADDR[inputToken.toString()]);
+        // @ts-ignore
         const dammPool = await AmmImpl.create(rpc.v1, dammPoolAddr);
 
         const tokenA = dammPool.tokenAMint;
@@ -95,21 +101,17 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
           const mlpAmount = ytValue.plus(syValue).round().toNumber();
 
           // MLP -> wfrag token amount
-          let supportedAsset: RestakingFundSupportedAsset | undefined = undefined;
           const withdrawQuoteBothTokens = dammPool.getWithdrawQuote(new BN(mlpAmount), 0);
 
           if (tokenA.address.toString() == inputToken.toString()) {
-            for (const fragmetricRestakingClient of fragmetricRestakingClients) {
-              supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
-                (asset) => asset.mint?.equals(tokenB.address),
-              );
-              if (supportedAsset) break;
-            }
+            const supportedAsset = receiptToken.fund.account!.data.supportedTokens.find(
+              (token) => token.mint == tokenB.address.toString(),
+            );
             if (!supportedAsset) {
               throw new Error('failed to find matched fragmetric supported token from given token');
             }
 
-            const tokenBOneTokenAsSol = new Decimal(supportedAsset.oneTokenAsSOL.toString());
+            const tokenBOneTokenAsSol = new Decimal(supportedAsset.oneTokenAsSol.toString());
 
             opts.produceSnapshot({
               owner: yt.owner.toString(),
@@ -123,17 +125,14 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
                 .toNumber(),
             });
           } else if (tokenB.address.toString() == inputToken.toString()) {
-            for (const fragmetricRestakingClient of fragmetricRestakingClients) {
-              supportedAsset = (await fragmetricRestakingClient.state.supportedAssets()).find(
-                (asset) => asset.mint?.equals(tokenA.address),
-              );
-              if (supportedAsset) break;
-            }
+            const supportedAsset = receiptToken.fund.account!.data.supportedTokens.find(
+              (token) => token.mint == tokenA.address.toString(),
+            );
             if (!supportedAsset) {
               throw new Error('failed to find matched fragmetric supported token from given token');
             }
 
-            const tokenAOneTokenAsSol = new Decimal(supportedAsset.oneTokenAsSOL.toString());
+            const tokenAOneTokenAsSol = new Decimal(supportedAsset.oneTokenAsSol.toString());
 
             opts.produceSnapshot({
               owner: yt.owner.toString(),

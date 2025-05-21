@@ -2,11 +2,11 @@ import { web3, Program, AnchorProvider, Wallet, Idl, ProgramAccount } from '@cor
 import * as token from '@solana/spl-token';
 import { RatexContracts } from './ratex.idl';
 import RatexContractsIDLFile from './ratex.idl.json';
-import { RestakingClient, RestakingFundReceiptToken } from '@fragmetric-labs/sdk';
+import { RestakingProgram } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
 import { Snapshot, SourceStreamFactory } from './index';
 import { RPCClient } from '../../../rpc';
-import { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
+import type { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
 // args: ratex yield market address, input token mint
 export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
@@ -29,26 +29,31 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
     '2koowWZUTSkdC9o2wgW12hpzEBj3S9JKmPy8WJbFZ4Zg',
   );
 
-  const fragmetricRestakingClients = await RestakingClient.createAll({
+  const restaking = RestakingProgram.connect({
     cluster: rpc.cluster,
-    connection: rpc.v1,
+    rpc: rpc.v2 as any,
+    rpcSubscriptions: null as any,
   });
-
-  let receiptToken: RestakingFundReceiptToken | null = null;
-  for (const fragmetricRestakingClient of fragmetricRestakingClients) {
-    const currentReceiptToken = await fragmetricRestakingClient.state.receiptToken();
-    if (currentReceiptToken.wrappedTokenMint?.equals(inputToken)) {
-      receiptToken = currentReceiptToken;
+  let receiptToken = restaking.fragSOL;
+  switch (inputToken.toString()) {
+    case 'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U':
+      receiptToken = restaking.fragSOL;
       break;
-    }
+    case 'WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR':
+      receiptToken = restaking.fragJTO;
+      break;
+    case 'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm':
+      receiptToken = restaking.fragBTC;
+      break;
   }
-  if (!receiptToken) {
+  if ((await receiptToken.wrappedTokenMint.resolveAddress()) != inputToken.toString()) {
     throw new Error('failed to find matched fragmetric receipt token from given input token');
   }
 
   const oracleList = await rateXProgram.account.oracle.all();
   const oracleRate = new Decimal(oracleList[0].account.rate.toString());
-  const inputTokenDecimals = receiptToken.decimals;
+  await receiptToken.resolveAccount();
+  const inputTokenDecimals = receiptToken.account!.data.decimals;
   const totalAmount = await getTotalDeposits({ rateXProgram, inputToken });
 
   const userStatsList = await rateXProgram.account.userStats.all();

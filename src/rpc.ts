@@ -1,10 +1,10 @@
-import web3 from '@solana/web3.js-1';
-import web3v2 from '@solana/web3.js-2';
+import * as web3 from '@solana/web3.js';
+import * as kit from '@solana/kit';
 import { logger } from './logger';
 import retry from 'promise-retry';
 
 export class RPCClient {
-  public readonly v2: web3v2.Rpc<any>;
+  public readonly v2: kit.Rpc<any>;
   public readonly v1: web3.Connection;
   public readonly cluster: 'mainnet' | 'devnet';
 
@@ -15,7 +15,7 @@ export class RPCClient {
   };
 
   constructor(private readonly endpoint: string) {
-    this.v2 = web3v2.createSolanaRpc(endpoint);
+    this.v2 = kit.createSolanaRpc(endpoint);
     this.v1 = new web3.Connection(endpoint);
     this.cluster = endpoint.includes('mainnet') ? 'mainnet' : 'devnet';
   }

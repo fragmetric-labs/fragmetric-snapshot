@@ -11,7 +11,7 @@
 $ pnpx @fragmetric-labs/snapshot@latest --help
 Usage: fragmetric-snapshot [options] [command]
 
-CLI to take defi snapshot or crank oracle feeds
+CLI to take defi snapshot
 
 Options:
   -V, --version                 output the version number
@@ -35,6 +35,8 @@ $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' kamino-lending 4pDCU
 $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' nxfinance-looping 9wgoVx6dtLRfHb7xaBpPb8gUkLuZZqyRkXUuL4Df6ZhA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
 $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' banx-looping 5c8BxBTHVWhVygh3gLioeQVJH6D4DcxEm167X74p8cNu WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' soon-bridge PMST7CMBeJubWwhieuTvjgyEEwH8FLdNorZdvMJ3aVA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute
@@ -52,3 +54,39 @@ $ pnpm build && npm publish --access public --tag dev
 $ npm dist-tag add @fragmetric-labs/snapshot@x.x.x latest
 ...
 ```
+
+### How to Test
+
+```shell
+$ pnpm test ./src/commands/snapshot/source/banx-looping.test.ts
+
+> @fragmetric-labs/snapshot@2.1.0 test /Users/dehypnosis/Works/fragmetric-snapshot
+> vitest --run ./src/commands/snapshot/source/banx-looping.test.ts
+
+
+ RUN  v3.1.3 /Users/dehypnosis/Works/fragmetric-snapshot
+
+stdout | src/commands/snapshot/source/banx-looping.test.ts > snapshot source: banx-looping > wfragSOL multiply
+{
+  options: {
+    source: 'banx-looping',
+    args: [
+      '5c8BxBTHVWhVygh3gLioeQVJH6D4DcxEm167X74p8cNu',
+      'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U'
+    ]
+  },
+  count: 1026,
+  amount: 3786001222210n
+}
+
+ ✓ src/commands/snapshot/source/banx-looping.test.ts (1 test) 1468ms
+   ✓ snapshot source: banx-looping > wfragSOL multiply  1468ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  21:57:02
+   Duration  1.71s (transform 27ms, setup 0ms, collect 144ms, tests 1.47s, environment 0ms, prepare 27ms)
+```
+
+`export SOLANA_RPC_MAINNET="https://custom-rpc-url"` to configure RPC for test suites.
+Some snapshot sources require `helius` rpc due to dependencies to specific RPC methods. (e.g. `orca-liqudity` source not works with other RPCs)

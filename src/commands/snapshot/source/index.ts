@@ -7,6 +7,7 @@ import { kaminoLending } from './kamino-lending';
 import { nxfinanceLooping } from './nxfinance-looping';
 import { logger } from '../../../logger';
 import { banxLooping } from './banx-looping';
+import { soonBridge } from './soon-bridge';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -16,6 +17,7 @@ export const sources = {
   'kamino-lending': kaminoLending,
   'nxfinance-looping': nxfinanceLooping,
   'banx-looping': banxLooping,
+  'soon-bridge': soonBridge,
 };
 
 export type Snapshot = {
