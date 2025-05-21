@@ -44,6 +44,9 @@ importers:
       '@solana/web3.js':
         specifier: ^1.98.2
         version: 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@texture-finance/superlendy-sdk':
+        specifier: ^0.0.30
+        version: 0.0.30(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.8.3)(utf-8-validate@5.0.10)
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -888,6 +891,9 @@ packages:
 
   '@switchboard-xyz/sbv2-lite@0.1.6':
     resolution: {integrity: sha512-yNNBBPpqefrf6QaUw7pKj1MYOtITaH5lqpGKdSMOqzGmtTOCBPI9P9Hz/ZfQEzbuRIUws1aNEazxYzitBo1q7Q==}
+
+  '@texture-finance/superlendy-sdk@0.0.30':
+    resolution: {integrity: sha512-GVIsdI7dw8T6n69p3CmfGEVfWKTogHVnq+DSNuGBj08EQk2femhxfhjpgY3PqZ5oZsX7F+PgIWP0Rw31xOcq7w==}
 
   '@types/big.js@6.2.2':
     resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
@@ -1974,6 +1980,10 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    hasBin: true
+
+  uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
   valibot@1.1.0:
@@ -3730,6 +3740,22 @@ snapshots:
       - typescript
       - utf-8-validate
 
+  '@texture-finance/superlendy-sdk@0.0.30(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.8.3)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor': 0.30.1(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@solana/buffer-layout': 4.0.1
+      '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@solana/spl-token': 0.3.11(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@solana/web3.js': 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      buffer: 6.0.3
+      uuid: 9.0.1
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - fastestsmallesttextencoderdecoder
+      - typescript
+      - utf-8-validate
+
   '@types/big.js@6.2.2': {}
 
   '@types/connect@3.4.38':
@@ -4922,6 +4948,8 @@ snapshots:
   uuid@10.0.0: {}
 
   uuid@8.3.2: {}
+
+  uuid@9.0.1: {}
 
   valibot@1.1.0(typescript@5.8.3):
     optionalDependencies:
