@@ -8,6 +8,7 @@ import { nxfinanceLooping } from './nxfinance-looping';
 import { logger } from '../../../logger';
 import { banxLooping } from './banx-looping';
 import { soonBridge } from './soon-bridge';
+import { textureLending } from './texture-lending';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -18,6 +19,7 @@ export const sources = {
   'nxfinance-looping': nxfinanceLooping,
   'banx-looping': banxLooping,
   'soon-bridge': soonBridge,
+  'texture-lending': textureLending,
 };
 
 export type Snapshot = {

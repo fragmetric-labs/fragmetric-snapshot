@@ -37,6 +37,8 @@ $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' nxfinance-looping 9w
 $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' banx-looping 5c8BxBTHVWhVygh3gLioeQVJH6D4DcxEm167X74p8cNu WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
 $ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' soon-bridge PMST7CMBeJubWwhieuTvjgyEEwH8FLdNorZdvMJ3aVA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' texture-lending C7a3AjWTvWxf9GSppTcB2E74waveZKNkVYLFFhjr4Uy2 WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute
