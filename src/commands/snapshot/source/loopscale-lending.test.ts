@@ -1,6 +1,6 @@
-import { describe, test } from "vitest";
-import { expectSnapshotSourceWorks } from "./testutil";
-import { loopscaleLending } from "./loopscale-lending";
+import { describe, test } from 'vitest';
+import { expectSnapshotSourceWorks } from './testutil';
+import { loopscaleLending } from './loopscale-lending';
 
 describe('snapshot source: loopscale-lending', async () => {
   // https://app.loopscale.com/vault/7n5F6vLutwTPuVju9t4ZC22vHyJNyGbHKzaokdyWycjy/
