@@ -1,4 +1,4 @@
-import web3 from '@solana/web3.js-1';
+import * as web3 from '@solana/web3.js';
 import { SourceStreamFactory } from '.';
 import { RPCClient } from '../../../rpc';
 import { Loopscale } from './loopscale.idl';
@@ -41,16 +41,24 @@ export const loopscaleLending: SourceStreamFactory = async (opts) => {
 
   const result: Record<string, number> = {};
 
-  for (const obj of [userCollateralBalance, filteredStrategyBalances, userVaultStakes]) {
-    for (const [key, value] of Object.entries(obj)) {
-      result[key] = Math.floor((result[key] || 0) + value);
-
-      opts.produceSnapshot({
-        owner: key,
-        baseTokenBalance: result[key],
-      });
+  process.nextTick(() => {
+    try {
+      for (const obj of [userCollateralBalance, filteredStrategyBalances, userVaultStakes]) {
+        for (const [key, value] of Object.entries(obj)) {
+          result[key] = Math.floor((result[key] || 0) + value);
+    
+          opts.produceSnapshot({
+            owner: key,
+            baseTokenBalance: result[key],
+          });
+        }
+      }
+    } catch (error) {
+      opts.close(error as Error);
+      return;
     }
-  }
+    opts.close();
+  });
 };
 
 function bytesToNumberLE(bytes: Uint8Array): number {
