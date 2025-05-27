@@ -53,6 +53,8 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
 
   let resultList: ResultListState[] = [];
 
+  const tokenDecimals = Number(sandglassMarket.marketConfig.priceBase.toString());
+
   resultList = await getSandglassAccount(
     sandglassProgram.provider.connection,
     market,
@@ -60,7 +62,7 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
     sandglassMarket.marketSigner,
     ytPoolAmount,
     lpMintSupply,
-    Number(sandglassMarket.marketConfig.priceBase.toString()),
+    tokenDecimals,
   );
   resultList = await getYtTokenAmount(
     sandglassProgram.provider.connection,
@@ -75,7 +77,7 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
     sandglassMarket.tokenLpMintAddress,
     ytPoolAmount,
     lpMintSupply,
-    Number(sandglassMarket.marketConfig.priceBase.toString()),
+    tokenDecimals,
   );
 
   resultList = await updateFeeAccount(
@@ -84,7 +86,7 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
     sandglassMarket.feeLpTokenAccount,
     ytPoolAmount,
     lpMintSupply,
-    Number(sandglassMarket.marketConfig.priceBase.toString()),
+    tokenDecimals,
   );
 
   process.nextTick(() => {
@@ -92,7 +94,7 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
       for (const resItem of resultList) {
         opts.produceSnapshot({
           owner: resItem.userAddress,
-          baseTokenBalance: resItem.ytTokenAmount.toNumber(),
+          baseTokenBalance: resItem.ytTokenAmount.mul(tokenDecimals).round().toNumber(),
         });
       }
     } catch (error) {
