@@ -5,7 +5,7 @@ import {
   AnchorProvider,
   Wallet,
 } from '@coral-xyz/anchor-29';
-import { PublicKey, Connection, Keypair, ConfirmOptions } from '@solana/web3.js-1';
+import { PublicKey, Connection, Keypair, ConfirmOptions } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import Decimal from 'decimal.js';
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes';
@@ -13,7 +13,6 @@ import { SourceStreamFactory } from './index';
 import { IDL, Sandglass } from './sandglass.idl';
 import { RPCClient } from '../../../rpc';
 
-const SANDGLASS_MARKET_ID = new PublicKey('8BTZiJ5G8SkB69bPtGfA2eiyYhkqbDhf8ryxovJFVnuJ');
 const SANDGLASS_PROGRAM_ID = new PublicKey('SANDsy8SBzwUE8Zio2mrYZYqL52Phr2WQb9DDKuXMVK');
 
 const confirmOpts = {
@@ -37,10 +36,11 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
     SANDGLASS_PROGRAM_ID,
     new AnchorProvider(rpc.v1, new Wallet(Keypair.generate()), confirmOpts),
   );
-  const sandglassMarket = await getMarket(
-    sandglassProgram.provider.connection,
-    SANDGLASS_MARKET_ID,
-  );
+
+  const market = new PublicKey(opts.args[0]);
+  const _ = new PublicKey(opts.args[1]);
+
+  const sandglassMarket = await getMarket(sandglassProgram.provider.connection, market);
 
   const ytPoolAmount = await getTokenAmount(
     sandglassProgram.provider.connection,
@@ -55,6 +55,7 @@ export const sandglassYieldTrading: SourceStreamFactory = async (opts) => {
 
   resultList = await getSandglassAccount(
     sandglassProgram.provider.connection,
+    market,
     resultList,
     sandglassMarket.marketSigner,
     ytPoolAmount,
@@ -140,6 +141,7 @@ function removeResultData(data: ResultListState[], userAddress: string) {
 
 async function getSandglassAccount(
   connection: Connection,
+  market: PublicKey,
   result: ResultListState[],
   marketSigner: PublicKey,
   ytPoolAmount: Decimal,
@@ -158,7 +160,7 @@ async function getSandglassAccount(
       {
         memcmp: {
           offset: 9,
-          bytes: SANDGLASS_MARKET_ID.toBase58(),
+          bytes: market.toBase58(),
         },
       },
     ],

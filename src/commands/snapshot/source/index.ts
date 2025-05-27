@@ -2,6 +2,7 @@ import { Readable } from 'stream';
 import { orcaLiquidity } from './orca-liquidity';
 import { kaminoLiquidity } from './kamino-liquidity';
 import { exponentYieldTrading } from './exponent-yield-trading';
+import { sandglassYieldTrading } from './sandglass-yield-trading';
 import { ratexYieldTrading } from './ratex-yield-trading';
 import { kaminoLending } from './kamino-lending';
 import { nxfinanceLooping } from './nxfinance-looping';
@@ -14,6 +15,7 @@ export const sources = {
   'orca-liquidity': orcaLiquidity,
   'kamino-liquidity': kaminoLiquidity,
   'exponent-yield-trading': exponentYieldTrading,
+  'sandglass-yield-trading': sandglassYieldTrading,
   'ratex-yield-trading': ratexYieldTrading,
   'kamino-lending': kaminoLending,
   'nxfinance-looping': nxfinanceLooping,
