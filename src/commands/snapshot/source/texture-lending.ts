@@ -33,11 +33,14 @@ export const textureLending: SourceStreamFactory = async (opts) => {
             return sum.add(new Decimal(item.deposited_amount.toString()));
           }, new Decimal(0));
 
+        const hasBorrows = position.borrows.length > 0;
+
         if (collateralAmount.isZero()) continue;
 
         opts.produceSnapshot({
           owner: owner.toString(),
           baseTokenBalance: collateralAmount.floor().toNumber(),
+          hasBorrows,
         });
       }
     } catch (error) {
