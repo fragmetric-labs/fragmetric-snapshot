@@ -25,7 +25,6 @@ export const sources = {
 export type Snapshot = {
   owner: string;
   baseTokenBalance: number;
-  hasBorrows?: boolean;
 };
 
 export type CreateSourceStreamOptions = {
