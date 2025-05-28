@@ -46,8 +46,6 @@ export const loopscaleLending: SourceStreamFactory = async (opts) => {
     strategy: vault,
   });
 
-  const result: Record<string, number> = {};
-
   process.nextTick(() => {
     try {
       // userCollateralBalance: looping (0)
