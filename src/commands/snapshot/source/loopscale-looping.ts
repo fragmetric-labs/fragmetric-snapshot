@@ -8,7 +8,7 @@ import { Loopscale } from './loopscale.idl';
 export const loopscaleLooping: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
 
-  const vault = new web3.PublicKey(opts.args[0]);
+  const _ = new web3.PublicKey(opts.args[0]);
   const inputToken = new web3.PublicKey(opts.args[1]);
 
   const loopscaleProgram = new Program(
@@ -16,11 +16,12 @@ export const loopscaleLooping: SourceStreamFactory = async (opts) => {
     new AnchorProvider(rpc.v1, new Wallet(web3.Keypair.generate())),
   );
 
-  const vaults = (await getVaultsByMint({ loopscaleProgram, mint: inputToken })).map((v) =>
-    v.publicKey.toString(),
-  );
-  if (!vaults.includes(vault.toString()))
-    throw new Error("input vault address doesn't match with input token mint");
+  // TODO: no need to validate vault? because opts.args[0] key would be arbitrary key
+  // const vaults = (await getVaultsByMint({ loopscaleProgram, mint: inputToken })).map((v) =>
+  //   v.publicKey.toString(),
+  // );
+  // if (!vaults.includes(vault.toString()))
+  //   throw new Error("input vault address doesn't match with input token mint");
 
   const loans = await getLoansBorrowedByMint({ loopscaleProgram, mint: inputToken });
   const userCollateralBalance = getBorrowerCollateralValuesForMint(loans);
