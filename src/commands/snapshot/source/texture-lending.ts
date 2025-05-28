@@ -39,8 +39,7 @@ export const textureLending: SourceStreamFactory = async (opts) => {
 
         opts.produceSnapshot({
           owner: owner.toString(),
-          baseTokenBalance: collateralAmount.floor().toNumber(),
-          hasBorrows,
+          baseTokenBalance: hasBorrows ? collateralAmount.floor().toNumber() : 0,
         });
       }
     } catch (error) {
