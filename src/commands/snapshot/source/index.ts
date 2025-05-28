@@ -9,6 +9,8 @@ import { logger } from '../../../logger';
 import { banxLooping } from './banx-looping';
 import { soonBridge } from './soon-bridge';
 import { textureLending } from './texture-lending';
+import { loopscaleLending } from './loopscale-lending';
+import { loopscaleLooping } from './loopscale-looping';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -20,6 +22,8 @@ export const sources = {
   'banx-looping': banxLooping,
   'soon-bridge': soonBridge,
   'texture-lending': textureLending,
+  'loopscale-lending': loopscaleLending,
+  'loopscale-looping': loopscaleLooping,
 };
 
 export type Snapshot = {

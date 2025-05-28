@@ -16,9 +16,7 @@ export const textureLending: SourceStreamFactory = async (opts) => {
     throw new Error('texture reserve info not found: ' + reserve.toString());
   }
   if (!reserveInfo.liquidity.mint.equals(baseTokenMint)) {
-    throw new Error(
-      'incorrect base token mint: ' + reserveInfo.liquidity.mint.toString(),
-    );
+    throw new Error('incorrect base token mint: ' + reserveInfo.liquidity.mint.toString());
   }
 
   const positions = await superLendyAccounts.getAllPositionsByReserve(reserve);
