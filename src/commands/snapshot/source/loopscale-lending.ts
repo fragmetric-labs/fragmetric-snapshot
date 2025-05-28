@@ -45,11 +45,10 @@ export const loopscaleLending: SourceStreamFactory = async (opts) => {
     try {
       for (const obj of [userCollateralBalance, filteredStrategyBalances, userVaultStakes]) {
         for (const [key, value] of Object.entries(obj)) {
-          result[key] = Math.floor((result[key] || 0) + value);
 
           opts.produceSnapshot({
             owner: key,
-            baseTokenBalance: result[key],
+            baseTokenBalance: Math.floor(value),
           });
         }
       }
