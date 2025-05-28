@@ -11,6 +11,8 @@ import { AccountLayout } from '@solana/spl-token';
 export const loopscaleLending: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
 
+  // 1. if vault key is strategy key, then it's lending vault
+  // 2. if vault key is vault key, then it's advanced lending
   const vault = new web3.PublicKey(opts.args[0]);
   const inputToken = new web3.PublicKey(opts.args[1]);
 
@@ -19,8 +21,10 @@ export const loopscaleLending: SourceStreamFactory = async (opts) => {
     new AnchorProvider(rpc.v1, new Wallet(web3.Keypair.generate())),
   );
 
-  const loans = await getLoansBorrowedByMint({ loopscaleProgram, mint: inputToken });
-  const userCollateralBalance = getBorrowerCollateralValuesForMint(loans);
+  // TODO: seperate looping to other source
+  // const loans = await getLoansBorrowedByMint({ loopscaleProgram, mint: inputToken });
+  // const userCollateralBalance = getBorrowerCollateralValuesForMint(loans);
+
   const userStrategyBalance = await getBalanceOfStrategiesForMint({
     loopscaleProgram,
     mint: inputToken,
@@ -28,24 +32,28 @@ export const loopscaleLending: SourceStreamFactory = async (opts) => {
   const vaults = (await getVaultsByMint({ loopscaleProgram, mint: inputToken })).map((v) =>
     v.publicKey.toString(),
   );
-  if (!vaults.includes(vault.toString()))
-    throw new Error("input vault address doesn't match with input token mint");
-  const filteredStrategyBalances = Object.fromEntries(
-    Object.entries(userStrategyBalance).filter(([key]) => !vaults.includes(key)),
-  );
+
+  let filteredStrategyBalances: { [k: string]: number } = {};
+  if (vaults.includes(vault.toString())) {
+    filteredStrategyBalances = Object.fromEntries(
+      Object.entries(userStrategyBalance).filter(([key]) => !vaults.includes(key)),
+    );
+  }
 
   const userVaultStakes = await getLendVaultPositionsForMint({
     loopscaleProgram,
     mint: inputToken,
+    strategy: vault,
   });
 
   const result: Record<string, number> = {};
 
   process.nextTick(() => {
     try {
-      for (const obj of [userCollateralBalance, filteredStrategyBalances, userVaultStakes]) {
+      // userCollateralBalance: looping (0)
+      for (const obj of [filteredStrategyBalances, userVaultStakes]) {
+        // 0: looping, 1: advanced lending, 2: lending vault
         for (const [key, value] of Object.entries(obj)) {
-
           opts.produceSnapshot({
             owner: key,
             baseTokenBalance: Math.floor(value),
@@ -188,9 +196,11 @@ async function getVaultsByMint({
 async function getLendVaultPositionsForMint({
   loopscaleProgram,
   mint,
+  strategy,
 }: {
   loopscaleProgram: Program<Loopscale>;
   mint: web3.PublicKey;
+  strategy: web3.PublicKey;
 }) {
   let vaults = await getVaultsByMint({ loopscaleProgram, mint });
   let strategyMap: { [vault: string]: string } = {};
@@ -212,6 +222,8 @@ async function getLendVaultPositionsForMint({
   for (let i = 0; i < vaults.length; i++) {
     const vault = vaults[i];
     const strategyAddress = strategyMap[vault.publicKey.toString()];
+    if (strategyAddress != strategy.toString()) continue; // filter the only strategy
+
     const stratPubkey = new web3.PublicKey(strategyAddress);
     const accountIndex = strats.indexOf(strategyAddress);
 
