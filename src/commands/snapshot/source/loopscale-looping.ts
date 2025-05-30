@@ -7,8 +7,7 @@ import { Loopscale } from './loopscale.idl';
 
 export const loopscaleLooping: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
-
-  const _ = new web3.PublicKey(opts.args[0]);
+  // const _ = new web3.PublicKey(opts.args[0]);
   const inputToken = new web3.PublicKey(opts.args[1]);
 
   const loopscaleProgram = new Program(
