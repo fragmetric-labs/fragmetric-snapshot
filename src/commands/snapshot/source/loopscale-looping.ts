@@ -101,9 +101,7 @@ function getBorrowerCollateralValuesForMint(
     const totalCollateral = new BN(collateralData.amount[0].reverse()).toNumber();
     const borrower = loans[i].account.borrower.toString();
 
-    userBalances[borrower] = userBalances[borrower]
-      ? userBalances[borrower] + totalCollateral
-      : totalCollateral;
+    userBalances[borrower] = (userBalances[borrower] ?? 0) + totalCollateral;
   }
   return userBalances;
 }
