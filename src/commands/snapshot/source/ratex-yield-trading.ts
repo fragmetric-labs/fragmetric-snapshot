@@ -151,10 +151,10 @@ async function getTotalDeposits({
       [Buffer.from('margin_market'), marginIndexBuffer],
       rateXProgram.programId,
     );
-    // @ts-ignore
-    const ata = token.getAssociatedTokenAddressSync(inputToken, marginMarketAddress, true);
-    const tokenBalanceData = (await rateXProgram.provider.connection.getTokenAccountBalance(ata))
-      .value;
+
+    const marginMarketData = await rateXProgram.account.marginMarket.fetch(marginMarketAddress);
+    const marginMarketVaultAddress = marginMarketData.vault;
+    const tokenBalanceData = (await rateXProgram.provider.connection.getTokenAccountBalance(marginMarketVaultAddress)).value;
     totalDeposits = totalDeposits.add(new Decimal(tokenBalanceData.amount));
   }
   return totalDeposits;
