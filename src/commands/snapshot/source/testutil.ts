@@ -32,11 +32,11 @@ export async function expectSnapshotSourceWorks(
       }
     }),
   ).resolves.not.toThrow();
-  expect(snapshotCount).toBeGreaterThan(0);
-  expect(totalBaseTokenBalance).toBeGreaterThan(0n);
   console.log({
     options: sourceStreamOptions,
     count: snapshotCount,
     amount: totalBaseTokenBalance,
   });
+  expect(snapshotCount).toBeGreaterThan(0);
+  expect(totalBaseTokenBalance).toBeGreaterThan(0n);
 }

@@ -15,12 +15,12 @@ describe('snapshot source: kamino-liquidity', async () => {
     });
   });
 
-  // https://app.kamino.finance/liquidity/DRikEqmQ6K8PKa2kQ58UWPfKuRBP1t6zGVXt2CfaEq2M
-  test('wfragJTO-JTO liquidity pool', async () => {
+  // https://app.kamino.finance/liquidity/DLJKhZAUr8k4KFcETPAZk9qHnscsudsbKNg7oKKYeMCC
+  test.only('wfragJTO-JTO liquidity pool', async () => {
     await expectSnapshotSourceWorks(kaminoLiquidity, {
       source: 'kamino-liquidity',
       args: [
-        'DRikEqmQ6K8PKa2kQ58UWPfKuRBP1t6zGVXt2CfaEq2M',
+        'DLJKhZAUr8k4KFcETPAZk9qHnscsudsbKNg7oKKYeMCC',
         'WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR',
         'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL',
       ],
