@@ -12,6 +12,7 @@ import { soonBridge } from './soon-bridge';
 import { textureLending } from './texture-lending';
 import { loopscaleLending } from './loopscale-lending';
 import { loopscaleLooping } from './loopscale-looping';
+import { segaLiquiditySonicBridge } from './sega-liquidity-sonic-bridge';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -26,6 +27,7 @@ export const sources = {
   'texture-lending': textureLending,
   'loopscale-lending': loopscaleLending,
   'loopscale-looping': loopscaleLooping,
+  'sega-liquidity-sonic-bridge': segaLiquiditySonicBridge,
 };
 
 export type Snapshot = {

@@ -2,6 +2,8 @@ import * as web3 from '@solana/web3.js';
 import * as kit from '@solana/kit';
 import { logger } from './logger';
 import retry from 'promise-retry';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_2022_PROGRAM_ID } from './commands/snapshot/source/soon-bridge';
 
 export class RPCClient {
   public readonly v2: kit.Rpc<any>;
@@ -72,5 +74,67 @@ export class RPCClient {
     return retry(this.retryOptions, () => {
       return this.v1.getTokenSupply(mintAddress).then((res) => res.value);
     });
+  }
+
+  async getTokenAccountsOfMint(mintAddress: web3.PublicKey): Promise<
+    {
+      programOwner: string;
+      address: string;
+      tokenOwner: string;
+      amount: bigint;
+    }[]
+  > {
+    enum AccountType {
+      /// Marker for 0 data
+      Uninitialized,
+      /// Mint account with additional extensions
+      Mint,
+      /// Token holding account with additional extensions
+      Account,
+    }
+
+    const TOKEN_ACC_SIZE = 165;
+
+    let totalAccs: web3.GetProgramAccountsResponse = [];
+
+    {
+      const accs = await this.v1.getProgramAccounts(TOKEN_PROGRAM_ID, {
+        dataSlice: { offset: 0, length: TOKEN_ACC_SIZE + 1 },
+        filters: [
+          { dataSize: TOKEN_ACC_SIZE },
+          { memcmp: { offset: 0, bytes: mintAddress.toBase58() } },
+        ],
+      });
+
+      totalAccs = totalAccs.concat(accs);
+    }
+
+    {
+      let accs = await this.v1.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
+        dataSlice: { offset: 0, length: TOKEN_ACC_SIZE + 1 },
+        filters: [{ memcmp: { offset: 0, bytes: mintAddress.toBase58() } }],
+      });
+
+      // filter out non-tokenAccount accounts
+      accs = accs.filter((acc) => acc.account.data[TOKEN_ACC_SIZE] == AccountType.Account);
+
+      totalAccs = totalAccs.concat(accs);
+    }
+
+    // Filter out zero balance accounts
+    const nonZeroAccs = totalAccs.filter(
+      (acc) => !acc.account.data.subarray(64, 64 + 8).equals(Buffer.from([0, 0, 0, 0, 0, 0, 0, 0])),
+    );
+
+    const finalAccs = nonZeroAccs.map((acc) => {
+      return {
+        programOwner: acc.account.owner.toBase58(),
+        address: acc.pubkey.toBase58(),
+        tokenOwner: new web3.PublicKey(acc.account.data.subarray(32, 64)).toBase58(),
+        amount: acc.account.data.subarray(64, 64 + 8).readBigUInt64LE(),
+      };
+    });
+
+    return finalAccs;
   }
 }
