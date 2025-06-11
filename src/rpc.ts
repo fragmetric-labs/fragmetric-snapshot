@@ -3,7 +3,8 @@ import * as kit from '@solana/kit';
 import { logger } from './logger';
 import retry from 'promise-retry';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { TOKEN_2022_PROGRAM_ID } from './commands/snapshot/source/soon-bridge';
+
+const TOKEN_2022_PROGRAM_ID = new web3.PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
 
 export class RPCClient {
   public readonly v2: kit.Rpc<any>;

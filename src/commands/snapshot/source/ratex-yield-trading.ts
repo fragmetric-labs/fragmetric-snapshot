@@ -154,7 +154,9 @@ async function getTotalDeposits({
 
     const marginMarketData = await rateXProgram.account.marginMarket.fetch(marginMarketAddress);
     const marginMarketVaultAddress = marginMarketData.vault;
-    const tokenBalanceData = (await rateXProgram.provider.connection.getTokenAccountBalance(marginMarketVaultAddress)).value;
+    const tokenBalanceData = (
+      await rateXProgram.provider.connection.getTokenAccountBalance(marginMarketVaultAddress)
+    ).value;
     totalDeposits = totalDeposits.add(new Decimal(tokenBalanceData.amount));
   }
   return totalDeposits;

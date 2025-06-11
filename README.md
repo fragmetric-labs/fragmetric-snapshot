@@ -22,29 +22,33 @@ Commands:
   help [command]                display help for command
 
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' orca-liquidity Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' orca-liquidity Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' kamino-liquidity 8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' exponent-yield-trading EJ4GPTCnNtemBVrT7QKhRfSKfM53aV2UJYGAC8gdVz5b WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' exponent-yield-trading EJ4GPTCnNtemBVrT7QKhRfSKfM53aV2UJYGAC8gdVz5b WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' ratex-yield-trading 46eiAqS6c96yjefnRiNQ2WXGjvSv7NBhyxc3f4AZZRZa WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' ratex-yield-trading 46eiAqS6c96yjefnRiNQ2WXGjvSv7NBhyxc3f4AZZRZa WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' kamino-lending 4pDCUGYftuPG1sV3xcqsn2YGfHC6Q3eZVfDyzQm8SK5A kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' kamino-lending 4pDCUGYftuPG1sV3xcqsn2YGfHC6Q3eZVfDyzQm8SK5A kySo1nETpsZE2NWe5vj2C64mPSciH1SppmHb4XieQ7B
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' nxfinance-looping 9wgoVx6dtLRfHb7xaBpPb8gUkLuZZqyRkXUuL4Df6ZhA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' nxfinance-looping 9wgoVx6dtLRfHb7xaBpPb8gUkLuZZqyRkXUuL4Df6ZhA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' banx-looping 5c8BxBTHVWhVygh3gLioeQVJH6D4DcxEm167X74p8cNu WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' banx-looping 5c8BxBTHVWhVygh3gLioeQVJH6D4DcxEm167X74p8cNu WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' soon-bridge PMST7CMBeJubWwhieuTvjgyEEwH8FLdNorZdvMJ3aVA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' soon-bridge PMST7CMBeJubWwhieuTvjgyEEwH8FLdNorZdvMJ3aVA WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' loopscale-lending 7JoN6uJodmc4J4mQG35N7jA9Y3rWDw4oQAQBeaPSoUaP WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' loopscale-lending 7JoN6uJodmc4J4mQG35N7jA9Y3rWDw4oQAQBeaPSoUaP WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' loopscale-lending 7n5F6vLutwTPuVju9t4ZC22vHyJNyGbHKzaokdyWycjy WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' loopscale-lending 7n5F6vLutwTPuVju9t4ZC22vHyJNyGbHKzaokdyWycjy WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' loopscale-looping 7n5F6vLutwTPuVju9t4ZC22vHyJNyGbHKzaokdyWycjy WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' loopscale-looping 7n5F6vLutwTPuVju9t4ZC22vHyJNyGbHKzaokdyWycjy WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot snapshot --rpc '<RPC-URL>' texture-lending C7a3AjWTvWxf9GSppTcB2E74waveZKNkVYLFFhjr4Uy2 WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' texture-lending C7a3AjWTvWxf9GSppTcB2E74waveZKNkVYLFFhjr4Uy2 WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sandglass-yield-trading 8BTZiJ5G8SkB69bPtGfA2eiyYhkqbDhf8ryxovJFVnuJ WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sega-liquidity-sonic-bridge 6frK7w6bRkRTutjmeiTJoD6tcBjrCh9Aph1tfkW35yoW WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute

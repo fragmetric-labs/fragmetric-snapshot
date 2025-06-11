@@ -1,11 +1,6 @@
 import * as web3 from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { SourceStreamFactory } from '.';
 import { RPCClient } from '../../../rpc';
-
-export const TOKEN_2022_PROGRAM_ID = new web3.PublicKey(
-  'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
-);
 
 export const SOON_SVM_MAINNET_RPC = 'https://rpc.mainnet.soo.network/rpc';
 export const SOON_SVM_WFRAGSOL_MINT_ADDRESS = new web3.PublicKey(

@@ -2,11 +2,7 @@ import * as web3 from '@solana/web3.js';
 import { SourceStreamFactory } from '.';
 import { RPCClient } from '../../../rpc';
 import Decimal from 'decimal.js';
-const { Sega, getConnection } = require('@sega-so/sega-sdk'); // avoid loading mjs bundle
-
-export const TOKEN_2022_PROGRAM_ID = new web3.PublicKey(
-  'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb',
-);
+const { Sega } = require('@sega-so/sega-sdk'); // avoid loading mjs bundle
 
 export const SONIC_SVM_MAINNET_RPC = 'https://rpc.mainnet-alpha.sonic.game';
 export const SONIC_SVM_WFRAGSOL_MINT_ADDRESS = new web3.PublicKey(
