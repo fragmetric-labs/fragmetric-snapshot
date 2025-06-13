@@ -35,4 +35,15 @@ describe('snapshot source: exponent-yield-trading', async () => {
       ],
     });
   });
+
+  // https://www.exponent.finance/liquidity/solv-fragbtc-30Sep25
+  test('solv-fragbtc-30Sep25 market', async () => {
+    await expectSnapshotSourceWorks(exponentYieldTrading, {
+      source: 'exponent-yield-trading',
+      args: [
+        'DdG9ZBNz24XeaynViCKTPJg3PU3YYDR694EbyNN2tuBG',
+        'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm',
+      ],
+    });
+  });
 });

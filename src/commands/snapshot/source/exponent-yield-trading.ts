@@ -54,6 +54,10 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
   const receiptTokenOneTokenAsSOL = new Decimal(
     receiptToken.fund.account!.data.oneReceiptTokenAsSol.toString(),
   );
+  const baseSupportedTokenOneTokenAsSOL =
+    receiptToken == restaking.fragSOL
+      ? Decimal.pow(10, 9)
+      : new Decimal(receiptToken.fund.account!.data.supportedTokens[0].oneTokenAsSol.toString());
   const balances = await getBalancesForVault(exponentCoreProgram, market);
 
   process.nextTick(async () => {
@@ -64,13 +68,14 @@ export const exponentYieldTrading: SourceStreamFactory = async (opts) => {
       }
 
       if (!isMeteoraMarket({ market })) {
-        // then it's normal exponent
         for (const yt of balances.ytBalances) {
           const ytAmount = new Decimal(yt.amount);
+
+          // how to map YT value to receipt token value?
+          // 1. if the receipt token is fragSOL, assume yt value is based on SOL.
+          // 2. otherwise, assume yt value is based on first supported token: JTO for fragJTO, zBTC(~=BTC) for fragBTC.
           const ytValue = ytAmount
-            .mul(
-              Decimal.pow(10, 2 * receiptToken.account!.data.decimals - balances.mintYt.decimals),
-            )
+            .mul(baseSupportedTokenOneTokenAsSOL)
             .div(receiptTokenOneTokenAsSOL)
             .floor();
 
