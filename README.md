@@ -48,7 +48,7 @@ $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' texture-lendi
 
 $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sandglass-yield-trading 8BTZiJ5G8SkB69bPtGfA2eiyYhkqbDhf8ryxovJFVnuJ WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
-$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sega-liquidity-sonic-bridge 6frK7w6bRkRTutjmeiTJoD6tcBjrCh9Aph1tfkW35yoW WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sonic-bridge 6frK7w6bRkRTutjmeiTJoD6tcBjrCh9Aph1tfkW35yoW WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 ```
 
 ### How to Contribute

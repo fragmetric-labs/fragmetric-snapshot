@@ -9,7 +9,7 @@ export const SONIC_SVM_WFRAGSOL_MINT_ADDRESS = new web3.PublicKey(
   'ApsE83FeU6NhRh1xYHiN2JmF2oDecNXZxn5ihXHFNWWL',
 );
 
-export const segaLiquiditySonicBridge: SourceStreamFactory = async (opts) => {
+export const sonicBridge: SourceStreamFactory = async (opts) => {
   const segaLiquidityPool = new web3.PublicKey(opts.args[0]);
   const inputToken = new web3.PublicKey(opts.args[1]);
   if (!inputToken.equals(new web3.PublicKey('WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U'))) {
