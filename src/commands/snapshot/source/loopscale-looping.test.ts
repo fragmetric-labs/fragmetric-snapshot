@@ -13,4 +13,15 @@ describe('snapshot source: loopscale-looping', async () => {
       ],
     });
   });
+
+  // https://app.loopscale.com/loops/wfragbtc-zbtc
+  test('wfragBTC looping', async () => {
+    await expectSnapshotSourceWorks(loopscaleLooping, {
+      source: 'loopscale-looping',
+      args: [
+        'HgmkjvzLaGa8J7QAmYsQL5b5fgAExGtpYpFxz9LYoHmT',
+        'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm',
+      ],
+    });
+  });
 });
