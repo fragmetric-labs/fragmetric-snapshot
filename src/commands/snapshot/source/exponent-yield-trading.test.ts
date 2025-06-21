@@ -14,6 +14,17 @@ describe('snapshot source: exponent-yield-trading', async () => {
     });
   });
 
+  // https://www.exponent.finance/liquidity/fragsol-31Oct25
+  test('fragsol-31Oct25 market', async () => {
+    await expectSnapshotSourceWorks(exponentYieldTrading, {
+      source: 'exponent-yield-trading',
+      args: [
+        'G7sZHejUwHtQzSfkaxvT2MN5DFfB1eVEBnCnJozX2QLk',
+        'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U',
+      ],
+    });
+  });
+
   // https://www.exponent.finance/liquidity/meteora-wfragSOL-JitoSOL-31Aug25
   test('meteora-wfragSOL-JitoSOL-31Aug25 market', async () => {
     await expectSnapshotSourceWorks(exponentYieldTrading, {
