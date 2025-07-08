@@ -39,4 +39,16 @@ describe('snapshot source: orca-liquidity', async () => {
       ],
     });
   });
+
+  // https://www.orca.so/pools/DufLmLSPfw8scyx5p6XRa8WuCvM6nEoVUjV4RkWTRpLS
+  test('wfragBTC-SOL liquidity pool', async () => {
+    await expectSnapshotSourceWorks(orcaLiquidity, {
+      source: 'orca-liquidity',
+      args: [
+        'DufLmLSPfw8scyx5p6XRa8WuCvM6nEoVUjV4RkWTRpLS',
+        'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm',
+        'So11111111111111111111111111111111111111112',
+      ],
+    });
+  });
 });
