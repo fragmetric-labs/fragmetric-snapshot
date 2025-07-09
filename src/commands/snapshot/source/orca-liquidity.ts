@@ -6,13 +6,16 @@ import { logger } from '../../../logger';
 
 const ignoringPositionOwnersByPools: { [poolAddress: string]: string[] } = {
   '5xfKkFmhzNhHKTFUkh4PJmHSWB6LpRvhJcUMKzPP6md2': [
-    'Efg7ieou9wNpMULsQdvuqEwTMNaCiGBkoytBmEFnjNoC', // Kamino wfragSOL-jitoSOL base authority
+    'Efg7ieou9wNpMULsQdvuqEwTMNaCiGBkoytBmEFnjNoC', // Kamino wfragSOL-jitoSOL (8sKf4C6iQ2wfCAp9oXf2NJZNjfDdN16aeYpkew6vsfbi) base vault authority
   ],
-  Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY: [
-    'C64K8RytjyWuLZuL5LvzDKMC6C2XaK6FD69v79eRHJDC', // Kamino wfragJTO-JTO base authority
+  'Cso7i3czFUiBo7rW7r6T7riKSQRzV7CPBcaY2Q56eVSY': [
+    'C64K8RytjyWuLZuL5LvzDKMC6C2XaK6FD69v79eRHJDC', // Kamino wfragJTO-JTO (DLJKhZAUr8k4KFcETPAZk9qHnscsudsbKNg7oKKYeMCC) base vault authority
   ],
-  H6gUYo94dMyhaT4Zm94DRSuH931atRcdAVdMCu3aAwze: [
-    'GenZuEkdpyWZ1WwEsehUZQAtcsLfztRtoW7yV3XY9uBo', // Kamino wfragBTC-zBTC base authority
+  'H6gUYo94dMyhaT4Zm94DRSuH931atRcdAVdMCu3aAwze': [
+    'GenZuEkdpyWZ1WwEsehUZQAtcsLfztRtoW7yV3XY9uBo', // Kamino wfragBTC-zBTC (2AXogHv1qD5dRfxWzWYijxsen2PgpnyziCwRYAWtBLv8) base vault authority
+  ],
+  '2nkB61PJRznGXHpqHwJ4te6pPH2Q7F8cr3EdxLUAaiaB': [
+    '2Q9Gk4h8oGgTbAHb35FnbYsC2tT5QXETSVhZEu2KyXYz', // Kamino wfragBTC-SOL (Cv7dcVAMPQVS2cJ7ueCWCEAxPRcd6kDfqA7tp8p3XxUj) base vault authority
   ],
 };
 

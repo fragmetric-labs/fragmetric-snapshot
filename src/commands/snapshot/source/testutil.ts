@@ -23,6 +23,7 @@ export async function expectSnapshotSourceWorks(
             }
           },
           produceSnapshot(snapshot): void {
+            console.log(snapshot);
             snapshotCount++;
             totalBaseTokenBalance += BigInt(snapshot.baseTokenBalance);
           },
