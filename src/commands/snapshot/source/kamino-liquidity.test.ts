@@ -38,4 +38,16 @@ describe('snapshot source: kamino-liquidity', async () => {
       ],
     });
   });
+
+  // https://app.kamino.finance/liquidity/Cv7dcVAMPQVS2cJ7ueCWCEAxPRcd6kDfqA7tp8p3XxUj
+  test('wfragBTC-SOL liquidity pool', async () => {
+    await expectSnapshotSourceWorks(kaminoLiquidity, {
+      source: 'kamino-liquidity',
+      args: [
+        'Cv7dcVAMPQVS2cJ7ueCWCEAxPRcd6kDfqA7tp8p3XxUj',
+        'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm',
+        'So11111111111111111111111111111111111111112',
+      ],
+    });
+  });
 });
