@@ -1,6 +1,6 @@
 {
   "name": "@fragmetric-labs/snapshot",
-  "version": "2.1.11",
+  "version": "2.1.12",
   "main": "dist/index.js",
   "bin": {
     "fragmetric-snapshot": "index.js"
