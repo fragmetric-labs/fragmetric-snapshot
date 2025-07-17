@@ -47,7 +47,9 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
   const poolTokenB = poolInfo.tokenMintB;
   const poolTokenADecimals = (await getMint(rpc.v1, new web3.PublicKey(poolTokenA))).decimals;
   const poolTokenBDecimals = (await getMint(rpc.v1, new web3.PublicKey(poolTokenB))).decimals;
-  const currentPrice = (poolInfo as any).price ?? 0;
+
+  const currentPriceBackend = (poolInfo as any).price ?? 0;
+  const currentPrice = currentPriceBackend * 10 ** (poolTokenBDecimals - poolTokenADecimals);
 
   const positionsInfo = await orca.fetchPositionsInWhirlpool(rpc.v2, pool.toString() as any);
   logger.info(`pool total positions: ${positionsInfo.length}`);
@@ -58,8 +60,9 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
   process.nextTick(async () => {
     try {
       for (const pos of positionsInfo) {
-        const lowerPrice = 1.0001 ** pos.data.tickLowerIndex * 10 ** (poolTokenADecimals - poolTokenBDecimals);
-        const upperPrice = 1.0001 ** pos.data.tickUpperIndex * 10 ** (poolTokenADecimals - poolTokenBDecimals);
+        const lowerPrice = 1.0001 ** pos.data.tickLowerIndex;
+        const upperPrice = 1.0001 ** pos.data.tickUpperIndex;
+        // these token amounts are on-chain values which means they are not dealed with token decimals yet
         const positionTokenAmountA =
           Number(pos.data.liquidity) *
           (function () {
@@ -95,13 +98,14 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
         const snapshot: Snapshot = {
           owner: positionTokenAccount,
           baseTokenBalance: (function () {
+            // these token amounts are notated with smallest token unit which means it's not dealed with token decimals yet
             if (poolTokenA == baseTokenMint) {
               if (positionTokenAmountA > 0) {
-                return Math.round(positionTokenAmountA + positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals) / currentPrice);
+                return Math.round(positionTokenAmountA + positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals) / currentPriceBackend);
               }
             } else if (poolTokenB == baseTokenMint) {
               if (positionTokenAmountB > 0) {
-                return Math.round(currentPrice * positionTokenAmountA * 10 ** (poolTokenBDecimals - poolTokenADecimals) + positionTokenAmountB);
+                return Math.round(currentPriceBackend * positionTokenAmountA * 10 ** (poolTokenBDecimals - poolTokenADecimals) + positionTokenAmountB);
               }
             }
             return 0;
