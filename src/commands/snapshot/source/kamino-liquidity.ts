@@ -60,6 +60,8 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
     };
   })();
 
+
+
   const farmState = (await farms.getAllFarmStatesByPubkeys([strategy.farm]))[0];
   const farmUsers = await farms.getAllUserStatesForFarm(strategy.farm);
 
