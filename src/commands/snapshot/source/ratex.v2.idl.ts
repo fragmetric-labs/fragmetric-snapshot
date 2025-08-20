@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/ratex_contracts.json`.
  */
 export type RatexContracts = {
-  address: 'rate3N1pCB9vwmZQRQ9ZdPg3mssXuDXfxfXtQ8LaD9S';
+  address: 'rateE3GompDX8X8a6WEqwve7kge6YwCGEhN8krmTFjB';
   metadata: {
     name: 'ratexContracts';
     version: '0.1.0';
