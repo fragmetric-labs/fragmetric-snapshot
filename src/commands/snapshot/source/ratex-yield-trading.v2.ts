@@ -1,10 +1,10 @@
 import { web3, Program, AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
 import Decimal from 'decimal.js';
-import RatexContractsIDLFile from './ratex-v2.idl.json';
+import RatexContractsIDLFile from './ratex.v2.idl.json';
 import { SourceStreamFactory } from '.';
 import { RPCClient } from '../../../rpc';
-import { RatexContracts } from './ratex-v2.idl';
+import { RatexContracts } from './ratex.v2.idl';
 import { RestakingProgram } from '@fragmetric-labs/sdk';
 
 const D2_64 = new Decimal(2).pow(64);
@@ -74,7 +74,7 @@ export const ratexV2YieldTrading: SourceStreamFactory = async (opts) => {
       return;
     }
     opts.close();
-  })
+  });
 };
 
 /** Compute token amounts from concentrated-liquidity formula */
@@ -199,7 +199,7 @@ export async function getTradersTokens({
   market,
 }: {
   rateXProgram: Program<RatexContracts>;
-  market: PublicKey,
+  market: PublicKey;
 }): Promise<{ owner: string; trader_yt_amount: bigint; trader_st_amount: bigint }[]> {
   const results = [];
 

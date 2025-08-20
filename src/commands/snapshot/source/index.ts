@@ -4,7 +4,6 @@ import { kaminoLiquidity } from './kamino-liquidity';
 import { exponentYieldTrading } from './exponent-yield-trading';
 import { sandglassYieldTrading } from './sandglass-yield-trading';
 import { ratexYieldTrading } from './ratex-yield-trading';
-import { ratexV2YieldTrading } from './ratex-v2-yield-trading';
 import { kaminoLending } from './kamino-lending';
 import { nxfinanceLooping } from './nxfinance-looping';
 import { logger } from '../../../logger';
@@ -23,7 +22,6 @@ export const sources = {
   'exponent-yield-trading': exponentYieldTrading,
   'sandglass-yield-trading': sandglassYieldTrading,
   'ratex-yield-trading': ratexYieldTrading,
-  'ratex-v2-yield-trading': ratexV2YieldTrading,
   'kamino-lending': kaminoLending,
   'nxfinance-looping': nxfinanceLooping,
   'banx-looping': banxLooping,
