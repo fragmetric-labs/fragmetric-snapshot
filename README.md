@@ -49,6 +49,12 @@ $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' texture-lendi
 $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sandglass-yield-trading 8BTZiJ5G8SkB69bPtGfA2eiyYhkqbDhf8ryxovJFVnuJ WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
 $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sonic-bridge 6frK7w6bRkRTutjmeiTJoD6tcBjrCh9Aph1tfkW35yoW WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
+
+# Topu NFT collection (with reveal/epic logic)
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft 6WTgf5Gt3SHuJeHtxsHuniRMdu2kAAVJLYAcG3nTpxj4 metaplexNFT111111111111111111111
+
+# General Metaplex NFT collection
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft <COLLECTION_ADDRESS> metaplexNFT111111111111111111111
 ```
 
 ### How to Contribute
@@ -101,4 +107,9 @@ stdout | src/commands/snapshot/source/banx-looping.test.ts > snapshot source: ba
 ```
 
 `export SOLANA_RPC_MAINNET="https://custom-rpc-url"` to configure RPC for test suites.
-Some snapshot sources require `helius` rpc due to dependencies to specific RPC methods. (e.g. `orca-liqudity` source not works with other RPCs)
+Some snapshot sources require `helius` rpc due to dependencies to specific RPC methods:
+
+- `orca-liquidity` source not works with other RPCs
+- `metaplex-nft` requires Helius RPC for `searchAssets` method
+  - Topu collection (`6WTgf5Gt3SHuJeHtxsHuniRMdu2kAAVJLYAcG3nTpxj4`): applies reveal/epic logic
+  - Other collections: counts all NFTs as normal (baseTokenBalance = NFT count)
