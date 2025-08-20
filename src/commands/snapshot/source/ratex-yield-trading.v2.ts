@@ -47,12 +47,16 @@ export const ratexV2YieldTrading: SourceStreamFactory = async (opts) => {
     throw new Error('failed to find matched fragmetric receipt token from given input token');
   }
 
-  const oracleList = await rateXProgram.account.oracle.all();
-  const oracleRate = new Decimal(oracleList[0].account.rate.toString());
   await receiptToken.resolveAccount();
   const inputTokenDecimals = receiptToken.account!.data.decimals;
 
-  const lps = await getLpsTokens({ rateXProgram, market });
+  // oracle
+  const yieldMarket = await (rateXProgram.account as any).yieldMarket.fetch(market);
+  const oraclePubkey: PublicKey = new web3.PublicKey(yieldMarket.oracle);
+  const oracle = await (rateXProgram.account as any).oracle.fetch(oraclePubkey);
+  const oracleRate = new Decimal(oracle.rate.toString());
+
+  const lps = await getLpsTokens({ rateXProgram, market, oracleRate });
   const traders = await getTradersTokens({ rateXProgram, market });
   const baseTokenBalances = await calcBaseTokenBalances({
     oracleRate,
@@ -108,9 +112,11 @@ function getTokenAmountsFromLiquidity(opts: {
 export async function getLpsTokens({
   rateXProgram,
   market,
+  oracleRate,
 }: {
   rateXProgram: Program<RatexContracts>;
   market: PublicKey;
+  oracleRate: Decimal;
 }): Promise<{ owner: string; lp_yt_amount: bigint; lp_st_amount: bigint }[]> {
   const results = [];
 
@@ -140,13 +146,8 @@ export async function getLpsTokens({
 
     // yield market + pool state
     const yieldMarket = await (rateXProgram.account as any).yieldMarket.fetch(yieldMarketPubkey);
-    const oraclePubkey: PublicKey = new web3.PublicKey(yieldMarket.oracle);
     const liquidity = new Decimal(yieldMarket.pool.liquidity.toString());
     const sqrtPriceU128 = new Decimal(yieldMarket.pool.sqrtPrice.toString());
-
-    // oracle
-    const oracle = await (rateXProgram.account as any).oracle.fetch(oraclePubkey);
-    const oracleRate = new Decimal(oracle.rate.toString());
 
     // ===== math (ported 1:1 from Python) =====
     const curLpLiquidity = lastLiquidity.mul(ratio).div(lastRatio).floor();
@@ -204,6 +205,7 @@ export async function getTradersTokens({
   const results = [];
 
   const users = await (rateXProgram.account as any).user.all();
+  const allYieldMarkets = await (rateXProgram.account as any).yieldMarket.all();
   for (const userAccount of users) {
     const user = userAccount.account;
     const pos0 = (user.yieldPositions as Array<any>)[0];
@@ -222,7 +224,6 @@ export async function getTradersTokens({
     const marketIndex: number = Number(pos0.marketIndex);
 
     // find the yield market by marketIndex
-    const allYieldMarkets = await (rateXProgram.account as any).yieldMarket.all();
     const ym = allYieldMarkets.find((x: any) => x.account.marketIndex === marketIndex);
     if (!ym) throw new Error(`YieldMarket not found for index=${marketIndex}`);
     if (ym.publicKey.toString() !== market.toString()) continue;
@@ -256,29 +257,26 @@ export async function calcBaseTokenBalances({
   lps: { owner: string; lp_yt_amount: bigint; lp_st_amount: bigint }[];
   traders: { owner: string; trader_yt_amount: bigint; trader_st_amount: bigint }[];
 }): Promise<{ owner: string; baseTokenBalance: bigint }[]> {
-  const results = [];
+  const balancesByOwner = new Map<string, bigint>();
+
   for (const lp of lps) {
-    results.push({
-      owner: lp.owner,
-      baseTokenBalance: lp.lp_yt_amount + lp.lp_st_amount,
-    });
+    const lpBalance =
+      ((lp.lp_yt_amount + lp.lp_st_amount) * BigInt(10 ** inputTokenDecimals)) /
+      BigInt(oracleRate.toString());
+    const currentBalance = balancesByOwner.get(lp.owner) ?? 0n;
+    balancesByOwner.set(lp.owner, currentBalance + lpBalance);
   }
 
   for (const trader of traders) {
-    const result = results.find((r) => r.owner === trader.owner);
-    if (result) {
-      result.baseTokenBalance +=
-        ((trader.trader_yt_amount + trader.trader_st_amount) * BigInt(10 ** inputTokenDecimals)) /
-        BigInt(oracleRate.toString());
-    } else {
-      results.push({
-        owner: trader.owner,
-        baseTokenBalance:
-          ((trader.trader_yt_amount + trader.trader_st_amount) * BigInt(10 ** inputTokenDecimals)) /
-          BigInt(oracleRate.toString()),
-      });
-    }
+    const traderBalance =
+      ((trader.trader_yt_amount + trader.trader_st_amount) * BigInt(10 ** inputTokenDecimals)) /
+      BigInt(oracleRate.toString());
+    const currentBalance = balancesByOwner.get(trader.owner) ?? 0n;
+    balancesByOwner.set(trader.owner, currentBalance + traderBalance);
   }
 
-  return results;
+  return Array.from(balancesByOwner.entries()).map(([owner, baseTokenBalance]) => ({
+    owner,
+    baseTokenBalance,
+  }));
 }
