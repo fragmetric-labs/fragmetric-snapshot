@@ -1,12 +1,12 @@
 import { web3, Program, AnchorProvider, Wallet, Idl, ProgramAccount } from '@coral-xyz/anchor';
-import * as token from '@solana/spl-token';
 import { RatexContracts } from './ratex.idl';
 import RatexContractsIDLFile from './ratex.idl.json';
 import { RestakingProgram } from '@fragmetric-labs/sdk';
 import Decimal from 'decimal.js';
-import { Snapshot, SourceStreamFactory } from './index';
+import { SourceStreamFactory } from './index';
 import { RPCClient } from '../../../rpc';
 import type { IdlAccounts } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
+import { ratexV2YieldTrading } from './ratex-yield-trading.v2';
 
 // args: ratex yield market address, input token mint
 export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
@@ -21,6 +21,17 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
   }
 
   RatexContractsIDLFile.address = marketAccountInfo.owner.toBase58();
+  switch (RatexContractsIDLFile.address.toString()) {
+    case 'RaTeUhvvohYGErSb2Sy3RA5EdMv9A9jtiJe8FHTg7uK': // v1 prod
+      break;
+    case 'rate3N1pCB9vwmZQRQ9ZdPg3mssXuDXfxfXtQ8LaD9S': // v2 staging
+      await ratexV2YieldTrading(opts);
+      return;
+    case 'rateE3GompDX8X8a6WEqwve7kge6YwCGEhN8krmTFjB': // v2 prod
+      await ratexV2YieldTrading(opts);
+      return;
+  }
+
   const rateXProgram = new Program(
     RatexContractsIDLFile as RatexContracts,
     new AnchorProvider(rpc.v1, new Wallet(new web3.Keypair())),
