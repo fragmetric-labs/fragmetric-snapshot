@@ -105,10 +105,6 @@ function getTokenAmountsFromLiquidity(opts: {
   return [roundUp ? tokenA.ceil() : tokenA, roundUp ? tokenB.ceil() : tokenB];
 }
 
-/**
- * Equivalent of Python `get_lp_tokens(lp_pda)`.
- * Returns YT/ST amounts for a given LP PDA.
- */
 export async function getLpsTokens({
   rateXProgram,
   market,
@@ -198,9 +194,6 @@ export async function getLpsTokens({
   return results;
 }
 
-/**
- * Equivalent of Python `get_trader_tokens(trader_pda)`.
- */
 export async function getTradersTokens({
   rateXProgram,
   market,
