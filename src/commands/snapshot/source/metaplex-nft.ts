@@ -8,11 +8,9 @@ const CONSTANTS = {
     minTimeout: 500,
     maxTimeout: 10_000,
   },
-  VIRTUAL_RECEIPT_TOKEN_MINT_ADDRESS: 'metaplexNFT111111111111111111111',
 
   // Topu-specific constants
   TOPU_COLLECTION_ID: '6WTgf5Gt3SHuJeHtxsHuniRMdu2kAAVJLYAcG3nTpxj4',
-  TOPU_REVEALED_JSON_URI_DOMAIN: 'nft-assets.topu.inc',
   TOPU_UNREVEALED_JSON_URI_DOMAIN:
     'bafybeiff3it3mcgkjtl5vcm2zni3miutlzrqpxylpgu3jzyqmykxay5gcm.ipfs.w3s.link',
 } as const;
@@ -27,6 +25,10 @@ const TOPU_EPIC_TRAITS = [
   { trait_type: 'Clothing', value: 'TOPU PJ_male' },
   { trait_type: 'Position', value: 'Medic_short' },
 ];
+
+const TOPU_EPIC_TRAITS_SET = new Set(
+  TOPU_EPIC_TRAITS.map((trait) => `${trait.trait_type}:${trait.value}`),
+);
 
 interface SearchAssetsResultItem {
   id: string;
@@ -65,17 +67,14 @@ function isTopuCollection(collectionId: string): boolean {
 
 function isTopuRevealed(jsonUri: string | undefined): boolean {
   if (!jsonUri) return false;
-  return jsonUri.includes(CONSTANTS.TOPU_REVEALED_JSON_URI_DOMAIN);
+  // Treat URIs containing the UNREVEALED domain as not revealed; others as revealed
+  return !jsonUri.includes(CONSTANTS.TOPU_UNREVEALED_JSON_URI_DOMAIN);
 }
 
 function isTopuEpic(attributes: Array<{ trait_type: string; value: string }> | undefined): boolean {
   if (!attributes) return false;
 
-  return TOPU_EPIC_TRAITS.some((epicTrait) =>
-    attributes.some(
-      (attr) => attr.trait_type === epicTrait.trait_type && attr.value === epicTrait.value,
-    ),
-  );
+  return attributes.some((attr) => TOPU_EPIC_TRAITS_SET.has(`${attr.trait_type}:${attr.value}`));
 }
 
 function calculateBaseTokenBalance(counts: NFTCounts): number {
@@ -177,19 +176,8 @@ async function collectNFTData(rpc: string, collectionId: string): Promise<Map<st
 }
 
 function generateSnapshots(ownerToCounts: Map<string, NFTCounts>, opts: SourceStreamOptions): void {
-  let totalBaseTokenBalance = 0n;
-  let epicOwners = 0;
-  let normalOnlyOwners = 0;
-
   for (const [owner, counts] of ownerToCounts.entries()) {
     const baseTokenBalance = calculateBaseTokenBalance(counts);
-    totalBaseTokenBalance += BigInt(baseTokenBalance);
-
-    if (counts.epic > 0) {
-      epicOwners++;
-    } else {
-      normalOnlyOwners++;
-    }
 
     opts.produceSnapshot({ owner, baseTokenBalance });
   }
@@ -197,14 +185,13 @@ function generateSnapshots(ownerToCounts: Map<string, NFTCounts>, opts: SourceSt
 
 export const metaplexNFT: SourceStreamFactory = async (opts) => {
   const collectionId = opts.args[0];
-  const receiptTokenMint = opts.args[1]; // "metaplexNFT111111111111111111111"
 
   if (!collectionId) {
     throw new Error('Collection ID is required as first argument');
   }
 
-  if (!receiptTokenMint || receiptTokenMint !== CONSTANTS.VIRTUAL_RECEIPT_TOKEN_MINT_ADDRESS) {
-    throw new Error(`Receipt token mint must be "${CONSTANTS.VIRTUAL_RECEIPT_TOKEN_MINT_ADDRESS}"`);
+  if (opts.args.length !== 1) {
+    throw new Error('metaplex-nft expects exactly 1 argument: <collectionId>');
   }
 
   try {

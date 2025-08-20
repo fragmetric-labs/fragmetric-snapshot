@@ -51,10 +51,10 @@ $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sandglass-yie
 $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' sonic-bridge 6frK7w6bRkRTutjmeiTJoD6tcBjrCh9Aph1tfkW35yoW WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U
 
 # Topu NFT collection (with reveal/epic logic)
-$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft 6WTgf5Gt3SHuJeHtxsHuniRMdu2kAAVJLYAcG3nTpxj4 metaplexNFT111111111111111111111
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft 6WTgf5Gt3SHuJeHtxsHuniRMdu2kAAVJLYAcG3nTpxj4
 
 # General Metaplex NFT collection
-$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft <COLLECTION_ADDRESS> metaplexNFT111111111111111111111
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft <COLLECTION_ADDRESS>
 ```
 
 ### How to Contribute

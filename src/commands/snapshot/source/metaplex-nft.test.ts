@@ -8,7 +8,6 @@ describe('snapshot source: metaplex-nft', async () => {
       source: 'metaplex-nft',
       args: [
         '6WTgf5Gt3SHuJeHtxsHuniRMdu2kAAVJLYAcG3nTpxj4', // Topu collection
-        'metaplexNFT111111111111111111111', // virtual receipt token mint
       ],
     });
   });
@@ -18,7 +17,6 @@ describe('snapshot source: metaplex-nft', async () => {
       source: 'metaplex-nft',
       args: [
         'J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w', // Mad Lads collection (example)
-        'metaplexNFT111111111111111111111', // virtual receipt token mint
       ],
     });
   });
