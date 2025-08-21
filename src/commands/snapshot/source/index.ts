@@ -13,6 +13,7 @@ import { textureLending } from './texture-lending';
 import { loopscaleLending } from './loopscale-lending';
 import { loopscaleLooping } from './loopscale-looping';
 import { sonicBridge } from './sonic-bridge';
+import { metaplexNFT } from './metaplex-nft';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -28,6 +29,7 @@ export const sources = {
   'loopscale-lending': loopscaleLending,
   'loopscale-looping': loopscaleLooping,
   'sonic-bridge': sonicBridge,
+  'metaplex-nft': metaplexNFT,
 };
 
 export type Snapshot = {
