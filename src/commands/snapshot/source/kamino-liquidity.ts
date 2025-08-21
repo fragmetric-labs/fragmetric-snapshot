@@ -38,7 +38,7 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
   const poolPrice = await kamino.getOrcaPoolPrice(strategy.pool);
 
   // since the decimals of two tokens might be different, we need to calculate the token amounts based on on-chain price
-  const {kaminoLiquidityTokenAAmount, kaminoLiquidityTokenBAmount} = await (async () => {
+  const { kaminoLiquidityTokenAAmount, kaminoLiquidityTokenBAmount } = await (async () => {
     const kaminoPosition = (await kamino.getOrcaPositions([strategy.position]))[0];
     if (!kaminoPosition) {
       throw new Error('kamino position not found');
@@ -47,7 +47,8 @@ export const kaminoLiquidity: SourceStreamFactory = async (opts) => {
     const kaminoLiquidity = new Decimal(kaminoPosition.liquidity.toString());
     const lowerPrice = 1.0001 ** kaminoPosition.tickLowerIndex;
     const upperPrice = 1.0001 ** kaminoPosition.tickUpperIndex;
-    const poolPriceOnchain = poolPrice.toNumber() * 10 ** (strategy.tokenBMintDecimals - strategy.tokenAMintDecimals);
+    const poolPriceOnchain =
+      poolPrice.toNumber() * 10 ** (strategy.tokenBMintDecimals - strategy.tokenAMintDecimals);
     const kaminoLiquidityTokenAAmount = kaminoLiquidity.mul(
       calcTokenAAmountWeight(poolPriceOnchain, lowerPrice, upperPrice),
     );
@@ -165,7 +166,7 @@ function calcTokenBAmountWeight(poolPrice: number, lowerPrice: number, upperPric
 }
 
 // these token amounts are notated with smallest token unit which means it's not dealed with token decimals yet
-// poolPrice is already notated with backend processed value which means it's already dealed with token decimals 
+// poolPrice is already notated with backend processed value which means it's already dealed with token decimals
 function calcBaseTokenBalance(
   poolTokenA: string,
   poolTokenB: string,
@@ -178,11 +179,15 @@ function calcBaseTokenBalance(
 ) {
   if (poolTokenA == baseTokenMint) {
     if (tokenAAmount > 0) {
-      return Math.round(tokenAAmount + tokenBAmount * 10 ** (poolTokenADecimals - poolTokenBDecimals) / poolPrice);
+      return Math.round(
+        tokenAAmount + (tokenBAmount * 10 ** (poolTokenADecimals - poolTokenBDecimals)) / poolPrice,
+      );
     }
   } else if (poolTokenB == baseTokenMint) {
     if (tokenBAmount > 0) {
-      return Math.round(poolPrice * tokenAAmount * 10 ** (poolTokenBDecimals - poolTokenADecimals) + tokenBAmount);
+      return Math.round(
+        poolPrice * tokenAAmount * 10 ** (poolTokenBDecimals - poolTokenADecimals) + tokenBAmount,
+      );
     }
   }
   return 0;

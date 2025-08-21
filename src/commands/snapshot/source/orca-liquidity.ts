@@ -102,11 +102,20 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
             // these token amounts are notated with smallest token unit which means it's not dealed with token decimals yet
             if (poolTokenA == baseTokenMint) {
               if (positionTokenAmountA > 0) {
-                return Math.round(positionTokenAmountA + positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals) / currentPriceBackend);
+                return Math.round(
+                  positionTokenAmountA +
+                    (positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals)) /
+                      currentPriceBackend,
+                );
               }
             } else if (poolTokenB == baseTokenMint) {
               if (positionTokenAmountB > 0) {
-                return Math.round(currentPriceBackend * positionTokenAmountA * 10 ** (poolTokenBDecimals - poolTokenADecimals) + positionTokenAmountB);
+                return Math.round(
+                  currentPriceBackend *
+                    positionTokenAmountA *
+                    10 ** (poolTokenBDecimals - poolTokenADecimals) +
+                    positionTokenAmountB,
+                );
               }
             }
             return 0;
