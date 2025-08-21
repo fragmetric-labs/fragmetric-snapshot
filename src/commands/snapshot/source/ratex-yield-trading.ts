@@ -22,14 +22,12 @@ export const ratexYieldTrading: SourceStreamFactory = async (opts) => {
 
   RatexContractsIDLFile.address = marketAccountInfo.owner.toBase58();
   switch (RatexContractsIDLFile.address.toString()) {
-    case 'RaTeUhvvohYGErSb2Sy3RA5EdMv9A9jtiJe8FHTg7uK': // v1 prod
+    case 'RaTeUhvvohYGErSb2Sy3RA5EdMv9A9jtiJe8FHTg7uK': // v1 fragSOL
+    case 'rAtewzmMSgn1QGewCM8PHdoW49bbuzrDQi4ftFoTFWo': // v1 fragJTO
+    case 'raTeaQusQToYvnH1kU531VJiUnsBjvwF19CUvFW3EAj': // v1 fragBTC
       break;
-    case 'rate3N1pCB9vwmZQRQ9ZdPg3mssXuDXfxfXtQ8LaD9S': // v2 staging
-      await ratexV2YieldTrading(opts);
-      return;
-    case 'rateE3GompDX8X8a6WEqwve7kge6YwCGEhN8krmTFjB': // v2 prod
-      await ratexV2YieldTrading(opts);
-      return;
+    default:
+      return ratexV2YieldTrading(opts);
   }
 
   const rateXProgram = new Program(
