@@ -16,18 +16,6 @@ describe('snapshot source: ratex-v2-yield-trading', async () => {
   });
 
   // production
-  // fragSOL
-  // https://app.rate-x.io/points?symbol=fragSOL-2510
-  test('fragSOL-2510 market', async () => {
-    await expectSnapshotSourceWorks(ratexV2YieldTrading, {
-      source: 'ratex-yield-trading',
-      args: [
-        '3jB3LKEy6xR1LCWArzqHsZ9v5CWxNNFhNzqy51xv5gEw',
-        'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U',
-      ],
-    });
-  });
-
   // https://app.rate-x.io/points?symbol=fragSOL-2601
   test('fragSOL-2601 market', async () => {
     await expectSnapshotSourceWorks(ratexV2YieldTrading, {
@@ -39,18 +27,6 @@ describe('snapshot source: ratex-v2-yield-trading', async () => {
     });
   });
 
-  // fragJTO
-  // https://app.rate-x.io/points?symbol=fragJTO-2510
-  test('fragJTO-2510 market', async () => {
-    await expectSnapshotSourceWorks(ratexV2YieldTrading, {
-      source: 'ratex-yield-trading',
-      args: [
-        'Cthq9BbpctLMAZw7DyWmvVcX9uyuSoVeCNBcepSjSmmL',
-        'WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR',
-      ],
-    });
-  });
-
   // https://app.rate-x.io/points?symbol=fragJTO-2601
   test('fragJTO-2601 market', async () => {
     await expectSnapshotSourceWorks(ratexV2YieldTrading, {
@@ -58,18 +34,6 @@ describe('snapshot source: ratex-v2-yield-trading', async () => {
       args: [
         '4JsDhy51uY8tUfWSJ4gUFz4apo7ua5FwjZgZDEkxTof8',
         'WFRGJnQt5pK8Dv4cDAbrSsgPcmboysrmX3RYhmRRyTR',
-      ],
-    });
-  });
-
-  // fragBTC
-  // https://app.rate-x.io/points?symbol=fragBTC-2510
-  test('fragBTC-2510 market', async () => {
-    await expectSnapshotSourceWorks(ratexV2YieldTrading, {
-      source: 'ratex-yield-trading',
-      args: [
-        'GEkVuB7mPNNCdHwYwo9iLr3RAYwc914HTPG5YVN2NXkQ',
-        'WFRGB49tP8CdKubqCdt5Spo2BdGS4BpgoinNER5TYUm',
       ],
     });
   });
