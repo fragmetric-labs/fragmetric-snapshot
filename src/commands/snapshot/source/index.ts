@@ -14,6 +14,7 @@ import { loopscaleLending } from './loopscale-lending';
 import { loopscaleLooping } from './loopscale-looping';
 import { sonicBridge } from './sonic-bridge';
 import { metaplexNFT } from './metaplex-nft';
+import { fragmetricNative } from './fragmetric-native';
 
 export const sources = {
   'orca-liquidity': orcaLiquidity,
@@ -30,6 +31,7 @@ export const sources = {
   'loopscale-looping': loopscaleLooping,
   'sonic-bridge': sonicBridge,
   'metaplex-nft': metaplexNFT,
+  'fragmetric-native': fragmetricNative,
 };
 
 export type Snapshot = {
