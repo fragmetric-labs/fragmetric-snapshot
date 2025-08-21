@@ -56,7 +56,7 @@ $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metapl
 # General Metaplex NFT collection
 $ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<HELIUS-RPC-URL>' metaplex-nft <COLLECTION_ADDRESS>
 
-$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' fragmetric-native 4YHmpuyY54Bsj61qNxYGgtQy8xhacfnhdZ6W92rqB64w FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo
+$ pnpx @fragmetric-labs/snapshot@latest snapshot --rpc '<RPC-URL>' fragmetric-native FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo
 
 ```
 
