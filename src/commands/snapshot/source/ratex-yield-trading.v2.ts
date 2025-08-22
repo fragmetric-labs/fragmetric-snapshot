@@ -211,9 +211,9 @@ export async function getTradersTokens({
   const allYieldMarkets = await (rateXProgram.account as any).yieldMarket.all();
   for (const userAccount of users) {
     const user = userAccount.account;
-    const pos = (user.yieldPositions as Array<any>).filter(
+    const pos = (user.yieldPositions as Array<any>).find(
       (yp) => yp.marketIndex === marketData.marketIndex,
-    )[0];
+    );
     if (!pos) {
       results.push({
         owner: user.authority.toBase58(),
