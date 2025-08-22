@@ -56,8 +56,8 @@ export const ratexV2YieldTrading: SourceStreamFactory = async (opts) => {
   const oracle = await (rateXProgram.account as any).oracle.fetch(oraclePubkey);
   const oracleRate = new Decimal(oracle.rate.toString());
 
-  const lps = await getLpsTokens({ rateXProgram, market, oracleRate });
-  const traders = await getTradersTokens({ rateXProgram, market });
+  const lps = await getLpsTokens({ rateXProgram, market, marketData: yieldMarket, oracleRate });
+  const traders = await getTradersTokens({ rateXProgram, market, marketData: yieldMarket });
   const baseTokenBalances = await calcBaseTokenBalances({
     oracleRate,
     inputTokenDecimals,
@@ -112,10 +112,12 @@ function getTokenAmountsFromLiquidity(opts: {
 export async function getLpsTokens({
   rateXProgram,
   market,
+  marketData,
   oracleRate,
 }: {
   rateXProgram: Program<RatexContracts>;
   market: PublicKey;
+  marketData: any;
   oracleRate: Decimal;
 }): Promise<{ owner: string; lp_yt_amount: bigint; lp_st_amount: bigint }[]> {
   const results = [];
@@ -145,9 +147,8 @@ export async function getLpsTokens({
     const settledQuoteAmount = new Decimal(unifiedPosition.settledQuoteAmount.toString());
 
     // yield market + pool state
-    const yieldMarket = await (rateXProgram.account as any).yieldMarket.fetch(yieldMarketPubkey);
-    const liquidity = new Decimal(yieldMarket.pool.liquidity.toString());
-    const sqrtPriceU128 = new Decimal(yieldMarket.pool.sqrtPrice.toString());
+    const liquidity = new Decimal(marketData.pool.liquidity.toString());
+    const sqrtPriceU128 = new Decimal(marketData.pool.sqrtPrice.toString());
 
     // ===== math (ported 1:1 from Python) =====
     const curLpLiquidity = lastLiquidity.mul(ratio).div(lastRatio).floor();
@@ -198,9 +199,11 @@ export async function getLpsTokens({
 export async function getTradersTokens({
   rateXProgram,
   market,
+  marketData,
 }: {
   rateXProgram: Program<RatexContracts>;
   market: PublicKey;
+  marketData: any;
 }): Promise<{ owner: string; trader_yt_amount: bigint; trader_st_amount: bigint }[]> {
   const results = [];
 
@@ -208,8 +211,10 @@ export async function getTradersTokens({
   const allYieldMarkets = await (rateXProgram.account as any).yieldMarket.all();
   for (const userAccount of users) {
     const user = userAccount.account;
-    const pos0 = (user.yieldPositions as Array<any>)[0];
-    if (!pos0) {
+    const pos = (user.yieldPositions as Array<any>).find(
+      (yp) => yp.marketIndex === marketData.marketIndex,
+    );
+    if (!pos) {
       results.push({
         owner: user.authority.toBase58(),
         trader_yt_amount: 0n,
@@ -218,14 +223,14 @@ export async function getTradersTokens({
       continue;
     }
 
-    const baseAssetAmount = new Decimal(pos0.baseAssetAmount.toString());
-    const quoteAssetAmount = new Decimal(pos0.quoteAssetAmount.toString());
-    const lastRate = new Decimal(pos0.lastRate.toString());
-    const marketIndex: number = Number(pos0.marketIndex);
+    const baseAssetAmount = new Decimal(pos.baseAssetAmount.toString());
+    const quoteAssetAmount = new Decimal(pos.quoteAssetAmount.toString());
+    const lastRate = new Decimal(pos.lastRate.toString());
+    const posMarketIndex: number = Number(pos.marketIndex);
 
     // find the yield market by marketIndex
-    const ym = allYieldMarkets.find((x: any) => x.account.marketIndex === marketIndex);
-    if (!ym) throw new Error(`YieldMarket not found for index=${marketIndex}`);
+    const ym = allYieldMarkets.find((x: any) => x.account.marketIndex === posMarketIndex);
+    if (!ym) throw new Error(`YieldMarket not found for index=${posMarketIndex}`);
     if (ym.publicKey.toString() !== market.toString()) continue;
 
     const oracle = await (rateXProgram.account as any).oracle.fetch(ym.account.oracle);
