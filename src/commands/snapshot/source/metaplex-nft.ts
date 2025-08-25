@@ -190,10 +190,6 @@ export const metaplexNFT: SourceStreamFactory = async (opts) => {
     throw new Error('Collection ID is required as first argument');
   }
 
-  if (opts.args.length !== 1) {
-    throw new Error('metaplex-nft expects exactly 1 argument: <collectionId>');
-  }
-
   try {
     const ownerToCounts = await collectNFTData(opts.rpc, collectionId);
     generateSnapshots(ownerToCounts, opts);
