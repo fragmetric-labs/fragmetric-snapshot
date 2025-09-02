@@ -8,6 +8,7 @@ import * as orca from '@orca-so/whirlpools';
 import * as orcaClient from '@orca-so/whirlpools-client';
 // @ts-ignore
 import { getMint } from '@solana/spl-token';
+import { calculateBaseTokenBalanceFromPosition } from './orca-liquidity';
 
 // There’s no on-chain field that uniquely identifies a looping instance.
 // We pass a synthetic identifier via the snapshot arguments to distinguish
@@ -71,57 +72,16 @@ export const loopscaleLooping: SourceStreamFactory = async (opts) => {
         throw new Error('loan has more than one position');
       }
 
-      const posData = positions[0].data as orcaClient.Position;
-      const lowerPrice = 1.0001 ** posData.tickLowerIndex;
-      const upperPrice = 1.0001 ** posData.tickUpperIndex;
-
-      const positionTokenAmountA =
-        Number(posData.liquidity) *
-        (function () {
-          if (currentPrice < lowerPrice) {
-            return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
-          } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
-            return 1 / Math.sqrt(currentPrice) - 1 / Math.sqrt(upperPrice);
-          } else {
-            // currentPrice > upperPrice
-            return 0;
-          }
-        })();
-
-      const positionTokenAmountB =
-        Number(posData.liquidity) *
-        (function () {
-          if (currentPrice < lowerPrice) {
-            return 0;
-          } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
-            return Math.sqrt(currentPrice) - Math.sqrt(lowerPrice);
-          } else {
-            // currentPrice > upperPrice
-            return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
-          }
-        })();
-
-      const baseTokenBalance = (function () {
-        if (poolTokenA == (inputToken.toString() as any)) {
-          if (positionTokenAmountA > 0) {
-            return Math.round(
-              positionTokenAmountA +
-                (positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals)) /
-                  currentPriceBackend,
-            );
-          }
-        } else if (poolTokenB == (inputToken.toString() as any)) {
-          if (positionTokenAmountB > 0) {
-            return Math.round(
-              currentPriceBackend *
-                positionTokenAmountA *
-                10 ** (poolTokenBDecimals - poolTokenADecimals) +
-                positionTokenAmountB,
-            );
-          }
-        }
-        return 0;
-      })();
+      const baseTokenBalance = calculateBaseTokenBalanceFromPosition(
+        inputToken.toString() as any,
+        poolTokenA,
+        poolTokenB,
+        poolTokenADecimals,
+        poolTokenBDecimals,
+        currentPriceBackend,
+        currentPrice,
+        positions[0].data as orcaClient.Position,
+      );
 
       userCollateralBalance[borrower] = (userCollateralBalance[borrower] ?? 0) + baseTokenBalance;
     }

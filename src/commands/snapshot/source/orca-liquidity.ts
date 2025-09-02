@@ -1,7 +1,9 @@
 import * as web3 from '@solana/web3.js';
+import { Address } from '@solana/kit';
 // @ts-ignore
 import { getMint } from '@solana/spl-token';
 import * as orca from '@orca-so/whirlpools';
+import { Position } from '@orca-so/whirlpools-client';
 import { Snapshot, SourceStreamFactory } from './index';
 import { RPCClient } from '../../../rpc';
 import { logger } from '../../../logger';
@@ -80,58 +82,18 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
           }
         }
 
-        const lowerPrice = 1.0001 ** pos.data.tickLowerIndex;
-        const upperPrice = 1.0001 ** pos.data.tickUpperIndex;
-        // these token amounts are on-chain values which means they are not dealed with token decimals yet
-        const positionTokenAmountA =
-          Number(pos.data.liquidity) *
-          (function () {
-            if (currentPrice < lowerPrice) {
-              return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
-            } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
-              return 1 / Math.sqrt(currentPrice) - 1 / Math.sqrt(upperPrice);
-            } else {
-              // currentPrice > upperPrice
-              return 0;
-            }
-          })();
-        const positionTokenAmountB =
-          Number(pos.data.liquidity) *
-          (function () {
-            if (currentPrice < lowerPrice) {
-              return 0;
-            } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
-              return Math.sqrt(currentPrice) - Math.sqrt(lowerPrice);
-            } else {
-              // currentPrice > upperPrice
-              return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
-            }
-          })();
-
         const snapshot: Snapshot = {
           owner: positionNFTOwner,
-          baseTokenBalance: (function () {
-            // these token amounts are notated with smallest token unit which means it's not dealed with token decimals yet
-            if (poolTokenA == baseTokenMint) {
-              if (positionTokenAmountA > 0) {
-                return Math.round(
-                  positionTokenAmountA +
-                    (positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals)) /
-                      currentPriceBackend,
-                );
-              }
-            } else if (poolTokenB == baseTokenMint) {
-              if (positionTokenAmountB > 0) {
-                return Math.round(
-                  currentPriceBackend *
-                    positionTokenAmountA *
-                    10 ** (poolTokenBDecimals - poolTokenADecimals) +
-                    positionTokenAmountB,
-                );
-              }
-            }
-            return 0;
-          })(),
+          baseTokenBalance: calculateBaseTokenBalanceFromPosition(
+            baseTokenMint as Address,
+            poolTokenA,
+            poolTokenB,
+            poolTokenADecimals,
+            poolTokenBDecimals,
+            currentPriceBackend,
+            currentPrice,
+            pos.data,
+          ),
         };
         if (snapshot.baseTokenBalance === 0) continue;
         opts.produceSnapshot(snapshot);
@@ -143,3 +105,69 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
     opts.close();
   });
 };
+
+export function calculateBaseTokenBalanceFromPosition(
+  baseTokenMint: Address,
+  poolTokenA: Address,
+  poolTokenB: Address,
+  poolTokenADecimals: number,
+  poolTokenBDecimals: number,
+  currentPriceBackend: number,
+  currentPrice: number,
+  positionData: Position,
+): number {
+  const lowerPrice = 1.0001 ** positionData.tickLowerIndex;
+  const upperPrice = 1.0001 ** positionData.tickUpperIndex;
+
+  // these token amounts are on-chain values which means they are not dealed with token decimals yet
+  const positionTokenAmountA =
+    Number(positionData.liquidity) *
+    (function () {
+      if (currentPrice < lowerPrice) {
+        return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
+      } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
+        return 1 / Math.sqrt(currentPrice) - 1 / Math.sqrt(upperPrice);
+      } else {
+        // currentPrice > upperPrice
+        return 0;
+      }
+    })();
+
+  const positionTokenAmountB =
+    Number(positionData.liquidity) *
+    (function () {
+      if (currentPrice < lowerPrice) {
+        return 0;
+      } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
+        return Math.sqrt(currentPrice) - Math.sqrt(lowerPrice);
+      } else {
+        // currentPrice > upperPrice
+        return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
+      }
+    })();
+
+  const baseTokenBalance = (function () {
+    // these token amounts are notated with smallest token unit which means it's not dealed with token decimals yet
+    if (poolTokenA == baseTokenMint) {
+      if (positionTokenAmountA > 0) {
+        return Math.round(
+          positionTokenAmountA +
+            (positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals)) /
+              currentPriceBackend,
+        );
+      }
+    } else if (poolTokenB == baseTokenMint) {
+      if (positionTokenAmountB > 0) {
+        return Math.round(
+          currentPriceBackend *
+            positionTokenAmountA *
+            10 ** (poolTokenBDecimals - poolTokenADecimals) +
+            positionTokenAmountB,
+        );
+      }
+    }
+    return 0;
+  })();
+
+  return baseTokenBalance;
+}
