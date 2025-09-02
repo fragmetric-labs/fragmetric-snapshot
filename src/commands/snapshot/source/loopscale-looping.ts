@@ -4,10 +4,30 @@ import { RPCClient } from '../../../rpc';
 import { AnchorProvider, BN, Program, ProgramAccount, Wallet } from '@coral-xyz/anchor';
 import LoopscaleIDLFile from './loopscale.idl.json';
 import { Loopscale } from './loopscale.idl';
+import * as orca from '@orca-so/whirlpools';
+import * as orcaClient from '@orca-so/whirlpools-client';
+// @ts-ignore
+import { getMint } from '@solana/spl-token';
+
+// There’s no on-chain field that uniquely identifies a looping instance.
+// We pass a synthetic identifier via the snapshot arguments to distinguish
+// between LP-token looping and normal-token looping.
+type VirtualMarketIdentifier =
+  | 'loopscaleLoopingWfragsol11111111111111111OWP'
+  | 'loopscaleLoopingWfragbtc11111111111111111OWP';
+
+const orcaLiquidityPoolAddress: Record<VirtualMarketIdentifier, web3.PublicKey> = {
+  loopscaleLoopingWfragsol11111111111111111OWP: new web3.PublicKey(
+    '5xfKkFmhzNhHKTFUkh4PJmHSWB6LpRvhJcUMKzPP6md2',
+  ),
+  loopscaleLoopingWfragbtc11111111111111111OWP: new web3.PublicKey(
+    'H6gUYo94dMyhaT4Zm94DRSuH931atRcdAVdMCu3aAwze',
+  ),
+};
 
 export const loopscaleLooping: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
-  // const _ = new web3.PublicKey(opts.args[0]);
+  const virtualMarketIdentifier = opts.args[0];
   const inputToken = new web3.PublicKey(opts.args[1]);
 
   const loopscaleProgram = new Program(
@@ -15,16 +35,106 @@ export const loopscaleLooping: SourceStreamFactory = async (opts) => {
     new AnchorProvider(rpc.v1, new Wallet(web3.Keypair.generate())),
   );
 
-  // TODO: no need to validate vault? because opts.args[0] key would be arbitrary key
-  // const vaults = (await getVaultsByMint({ loopscaleProgram, mint: inputToken })).map((v) =>
-  //   v.publicKey.toString(),
-  // );
-  // if (!vaults.includes(vault.toString()))
-  //   throw new Error("input vault address doesn't match with input token mint");
+  const loans = await getLoansByMarketOrMint({
+    loopscaleProgram,
+    virtualMarketIdentifier,
+    mint: inputToken,
+  });
 
-  const loans = await getLoansBorrowedByMint({ loopscaleProgram, mint: inputToken });
-  const userCollateralBalance = getBorrowerCollateralValuesForMint(loans);
+  const userCollateralBalance: { [user: string]: number } = {};
 
+  if (
+    virtualMarketIdentifier == 'loopscaleLoopingWfragsol11111111111111111OWP' ||
+    virtualMarketIdentifier == 'loopscaleLoopingWfragbtc11111111111111111OWP'
+  ) {
+    // LP-token looping
+    const poolInfo = await orcaClient.fetchWhirlpool(
+      rpc.v2,
+      orcaLiquidityPoolAddress[virtualMarketIdentifier].toString() as any,
+    );
+    const poolTokenA = poolInfo.data.tokenMintA;
+    const poolTokenB = poolInfo.data.tokenMintB;
+    const poolTokenADecimals = (await getMint(rpc.v1, new web3.PublicKey(poolTokenA))).decimals;
+    const poolTokenBDecimals = (await getMint(rpc.v1, new web3.PublicKey(poolTokenB))).decimals;
+
+    const currentPrice = 1.0001 ** poolInfo.data.tickCurrentIndex;
+    const currentPriceBackend = currentPrice / 10 ** (poolTokenBDecimals - poolTokenADecimals);
+
+    for (let i = 0; i < loans.length; i++) {
+      const borrower = loans[i].account.borrower.toString();
+      const positions = await orca.fetchPositionsForOwner(
+        rpc.v2,
+        loans[i].publicKey.toString() as any,
+      );
+
+      if (positions.length > 1) {
+        throw new Error('loan has more than one position');
+      }
+
+      const posData = positions[0].data as orcaClient.Position;
+      const lowerPrice = 1.0001 ** posData.tickLowerIndex;
+      const upperPrice = 1.0001 ** posData.tickUpperIndex;
+
+      const positionTokenAmountA =
+        Number(posData.liquidity) *
+        (function () {
+          if (currentPrice < lowerPrice) {
+            return 1 / Math.sqrt(lowerPrice) - 1 / Math.sqrt(upperPrice);
+          } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
+            return 1 / Math.sqrt(currentPrice) - 1 / Math.sqrt(upperPrice);
+          } else {
+            // currentPrice > upperPrice
+            return 0;
+          }
+        })();
+
+      const positionTokenAmountB =
+        Number(posData.liquidity) *
+        (function () {
+          if (currentPrice < lowerPrice) {
+            return 0;
+          } else if (lowerPrice <= currentPrice && currentPrice <= upperPrice) {
+            return Math.sqrt(currentPrice) - Math.sqrt(lowerPrice);
+          } else {
+            // currentPrice > upperPrice
+            return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
+          }
+        })();
+
+      const baseTokenBalance = (function () {
+        if (poolTokenA == (inputToken.toString() as any)) {
+          if (positionTokenAmountA > 0) {
+            return Math.round(
+              positionTokenAmountA +
+                (positionTokenAmountB * 10 ** (poolTokenADecimals - poolTokenBDecimals)) /
+                  currentPriceBackend,
+            );
+          }
+        } else if (poolTokenB == (inputToken.toString() as any)) {
+          if (positionTokenAmountB > 0) {
+            return Math.round(
+              currentPriceBackend *
+                positionTokenAmountA *
+                10 ** (poolTokenBDecimals - poolTokenADecimals) +
+                positionTokenAmountB,
+            );
+          }
+        }
+        return 0;
+      })();
+
+      userCollateralBalance[borrower] = (userCollateralBalance[borrower] ?? 0) + baseTokenBalance;
+    }
+  } else {
+    // normal-token looping
+    for (let i = 0; i < loans.length; i++) {
+      const borrower = loans[i].account.borrower.toString();
+      const collateralData = loans[i].account.collateral[0];
+      const totalCollateral = new BN(collateralData.amount[0].reverse()).toNumber();
+
+      userCollateralBalance[borrower] = (userCollateralBalance[borrower] ?? 0) + totalCollateral;
+    }
+  }
   process.nextTick(() => {
     try {
       for (const [key, value] of Object.entries(userCollateralBalance)) {
@@ -41,67 +151,39 @@ export const loopscaleLooping: SourceStreamFactory = async (opts) => {
   });
 };
 
-async function getVaultsByMint({
+async function getLoansByMarketOrMint({
   loopscaleProgram,
+  virtualMarketIdentifier,
   mint,
 }: {
   loopscaleProgram: Program<Loopscale>;
+  virtualMarketIdentifier: string;
   mint: web3.PublicKey;
 }) {
-  const principalFilter = [
-    {
+  const loanFilter = [];
+
+  if (
+    virtualMarketIdentifier == 'loopscaleLoopingWfragsol11111111111111111OWP' ||
+    virtualMarketIdentifier == 'loopscaleLoopingWfragbtc11111111111111111OWP'
+  ) {
+    loanFilter.push({
       memcmp: {
-        offset: 8 + 32 + 32 + 1 + 8 + 32,
-        bytes: mint.toBase58(),
+        // collateral.data.asset_identifier (pool address)
+        offset:
+          8 + 1 + 1 + 1 + 32 + 8 + 8 + 5 * (1 + 3 * 32 + 4 * 8 + 5 + 24 + 3 * 8) + (32 + 8 + 1),
+        bytes: orcaLiquidityPoolAddress[virtualMarketIdentifier].toBase58(),
       },
-    },
-  ];
-  const vaults = await loopscaleProgram.account.vault.all(principalFilter);
-
-  return vaults;
-}
-
-async function getLoansBorrowedByMint({
-  loopscaleProgram,
-  mint,
-}: {
-  loopscaleProgram: Program<Loopscale>;
-  mint: web3.PublicKey;
-}) {
-  const borrowMintFilter = [
-    {
+    });
+  } else {
+    loanFilter.push({
       memcmp: {
+        // collateral.data.asset_mint (token mint)
         offset: 8 + 1 + 1 + 1 + 32 + 8 + 8 + 5 * (1 + 3 * 32 + 4 * 8 + 5 + 24 + 3 * 8),
         bytes: mint.toBase58(),
       },
-    },
-  ];
-  const loansBorrowed = await loopscaleProgram.account.loan.all(borrowMintFilter);
-  return loansBorrowed;
-}
-
-function getBorrowerCollateralValuesForMint(
-  loans: ProgramAccount<{
-    version: number;
-    bump: number;
-    loanType: number;
-    borrower: web3.PublicKey;
-    nonce: BN;
-    startTime: any;
-    ledgers: any[];
-    collateral: any[];
-    weightMatrix: any[][];
-    ltvMatrix: any[][];
-    lqtMatrix: any[][];
-  }>[],
-) {
-  const userBalances: { [user: string]: number } = {};
-  for (let i = 0; i < loans.length; i++) {
-    const collateralData = loans[i].account.collateral[0];
-    const totalCollateral = new BN(collateralData.amount[0].reverse()).toNumber();
-    const borrower = loans[i].account.borrower.toString();
-
-    userBalances[borrower] = (userBalances[borrower] ?? 0) + totalCollateral;
+    });
   }
-  return userBalances;
+
+  const loans = await loopscaleProgram.account.loan.all(loanFilter);
+  return loans;
 }
