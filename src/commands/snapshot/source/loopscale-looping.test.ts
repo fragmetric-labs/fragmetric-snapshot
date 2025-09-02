@@ -26,7 +26,7 @@ describe('snapshot source: loopscale-looping', () => {
   });
 
   // https://app.loopscale.com/loops/orcaFragSolJitoSol-fragSol
-  test.only('OWP wfragSOL-JitoSOL looping', async () => {
+  test('OWP wfragSOL-JitoSOL looping', async () => {
     await expectSnapshotSourceWorks(loopscaleLooping, {
       source: 'loopscale-looping',
       args: [
@@ -37,7 +37,7 @@ describe('snapshot source: loopscale-looping', () => {
   });
 
   // https://app.loopscale.com/loops/orcazBTCwfragBTC
-  test.only('OWP wfragBTC-zBTC looping', async () => {
+  test('OWP wfragBTC-zBTC looping', async () => {
     await expectSnapshotSourceWorks(loopscaleLooping, {
       source: 'loopscale-looping',
       args: [
