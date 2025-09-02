@@ -21,6 +21,7 @@ const ignoringPositionOwnersByPools: { [poolAddress: string]: string[] } = {
     '2Q9Gk4h8oGgTbAHb35FnbYsC2tT5QXETSVhZEu2KyXYz', // Kamino wfragBTC-SOL (Cv7dcVAMPQVS2cJ7ueCWCEAxPRcd6kDfqA7tp8p3XxUj) base vault authority
   ],
 };
+const loopScaleProgramAddress: string = '1oopBoJG58DgkUVKkEzKgyG9dvRmpgeEm1AVjoHkF78'; // Orca LP token's ata whose owner is loopscale program need to be excluded
 
 // args: pool address, base token mint, other token mint, [whirlpool config]
 export const orcaLiquidity: SourceStreamFactory = async (opts) => {
@@ -90,6 +91,14 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
           })();
         const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
         if (!positionTokenAccount) continue;
+
+        // ignore position ata owned by loopscale program
+        const positionTokenAccountInfo = await rpc.v1.getAccountInfo(
+          new web3.PublicKey(positionTokenAccount),
+        );
+        if (positionTokenAccountInfo?.owner.toString() == loopScaleProgramAddress) {
+          continue;
+        }
 
         // ignore Kamino vaults
         if (ignoringPositionOwners.has(positionTokenAccount)) {
