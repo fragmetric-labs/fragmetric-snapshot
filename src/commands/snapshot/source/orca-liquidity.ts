@@ -62,6 +62,24 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
   process.nextTick(async () => {
     try {
       for (const pos of positionsInfo) {
+        const positionNFTOwner = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
+        if (!positionNFTOwner) continue;
+
+        if (!web3.PublicKey.isOnCurve(positionNFTOwner)) {
+          // ignore Kamino vaults
+          if (ignoringPositionOwners.has(positionNFTOwner)) {
+            continue;
+          }
+
+          const positionTokenOwnerInfo = await rpc.v1.getAccountInfo(
+            new web3.PublicKey(positionNFTOwner),
+          );
+          // ignore position ATA owned by loopscale program
+          if (positionTokenOwnerInfo?.owner.toString() == loopScaleProgramAddress) {
+            continue;
+          }
+        }
+
         const lowerPrice = 1.0001 ** pos.data.tickLowerIndex;
         const upperPrice = 1.0001 ** pos.data.tickUpperIndex;
         // these token amounts are on-chain values which means they are not dealed with token decimals yet
@@ -89,24 +107,9 @@ export const orcaLiquidity: SourceStreamFactory = async (opts) => {
               return Math.sqrt(upperPrice) - Math.sqrt(lowerPrice);
             }
           })();
-        const positionTokenAccount = await rpc.getNFTOwnerByMintAddress(pos.data.positionMint);
-        if (!positionTokenAccount) continue;
-
-        // ignore position ata owned by loopscale program
-        const positionTokenAccountInfo = await rpc.v1.getAccountInfo(
-          new web3.PublicKey(positionTokenAccount),
-        );
-        if (positionTokenAccountInfo?.owner.toString() == loopScaleProgramAddress) {
-          continue;
-        }
-
-        // ignore Kamino vaults
-        if (ignoringPositionOwners.has(positionTokenAccount)) {
-          continue;
-        }
 
         const snapshot: Snapshot = {
-          owner: positionTokenAccount,
+          owner: positionNFTOwner,
           baseTokenBalance: (function () {
             // these token amounts are notated with smallest token unit which means it's not dealed with token decimals yet
             if (poolTokenA == baseTokenMint) {
