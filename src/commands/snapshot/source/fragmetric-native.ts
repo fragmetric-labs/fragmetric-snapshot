@@ -26,11 +26,6 @@ export const fragmetricNative: SourceStreamFactory = async (opts) => {
     );
   }
 
-  const ignoringOwners: (Address | null)[] = await Promise.all([
-    fragX.fund.resolveAddress(),
-    fragX.fund.wrap.resolveAddress(),
-  ]);
-
   process.nextTick(async () => {
     try {
       const tokenAccounts = await rpc.getTokenAccountsOfMint(
@@ -38,7 +33,7 @@ export const fragmetricNative: SourceStreamFactory = async (opts) => {
       );
 
       for (const tokenAccount of tokenAccounts) {
-        if (ignoringOwners.includes(tokenAccount.tokenOwner as Address)) {
+        if (!web3.PublicKey.isOnCurve(new web3.PublicKey(tokenAccount.tokenOwner))) {
           continue;
         }
         opts.produceSnapshot({
