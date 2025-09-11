@@ -5,6 +5,13 @@ import { expectSnapshotSourceWorks } from './testutil';
 describe('snapshot source: fragmetric-native', async () => {
   test.each([
     {
+      name: 'fragSOL wrapped token balance',
+      args: [
+        'FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo',
+        'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U',
+      ],
+    },
+    {
       name: 'fragSOL receipt token balance',
       args: ['FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo'],
     },
