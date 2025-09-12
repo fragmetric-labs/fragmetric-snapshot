@@ -7,8 +7,8 @@ describe('snapshot source: fragmetric-native', async () => {
     {
       name: 'fragSOL wrapped token balance',
       args: [
-        'FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo',
         'WFRGSWjaz8tbAxsJitmbfRuFV2mSNwy7BMWcCwaA28U',
+        'FRAGSEthVFL7fdqM8hxfxkfCZzUvmg21cqPJVvC1qdbo',
       ],
     },
     {

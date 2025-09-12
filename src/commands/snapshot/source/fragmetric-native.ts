@@ -6,8 +6,8 @@ import { SourceStreamFactory } from './index';
 
 export const fragmetricNative: SourceStreamFactory = async (opts) => {
   const rpc = new RPCClient(opts.rpc);
-  const receiptTokenMintAddress = opts.args[0];
-  const targetTokenMintAddress = opts.args[1] || receiptTokenMintAddress;
+  const targetTokenMintAddress = opts.args[0]; // pool address
+  const receiptTokenMintAddress = opts.args[1] || targetTokenMintAddress; // token A
 
   const restaking = RestakingProgram[rpc.cluster]();
   const fragX = await restaking.receiptTokenMint(receiptTokenMintAddress);
