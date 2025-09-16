@@ -18,12 +18,12 @@ const CONSTANTS = {
 const TOPU_EPIC_TRAITS = [
   { trait_type: 'Color', value: 'Solana' },
   { trait_type: 'Type', value: 'Skull' },
-  { trait_type: 'Skin', value: 'Galaxy_male' },
-  { trait_type: 'Skin', value: 'Aurora_female' },
-  { trait_type: 'Eyes', value: 'Insane Mint_male' },
-  { trait_type: 'Eyes', value: 'Insane Yellow_male' },
-  { trait_type: 'Clothing', value: 'TOPU PJ_male' },
-  { trait_type: 'Position', value: 'Medic_short' },
+  { trait_type: 'Skin', value: 'Galaxy' },
+  { trait_type: 'Skin', value: 'Aurora' },
+  { trait_type: 'Eyes', value: 'Insane Mint' },
+  { trait_type: 'Eyes', value: 'Insane Yellow' },
+  { trait_type: 'Clothing', value: 'TOPU PJ' },
+  { trait_type: 'Position', value: 'Medic' },
 ];
 
 const TOPU_EPIC_TRAITS_SET = new Set(
