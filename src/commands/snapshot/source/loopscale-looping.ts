@@ -62,6 +62,17 @@ export const loopscaleLooping: SourceStreamFactory = async (opts) => {
     const currentPriceBackend = currentPrice / 10 ** (poolTokenBDecimals - poolTokenADecimals);
 
     for (let i = 0; i < loans.length; i++) {
+      // Loopscale leaves Loan PDAs on-chain even after a loan is fully
+      // repaid (ledger statuses reset to 0 but `collateral.asset_identifier`
+      // is kept), so the memcmp filter still returns these "ghost" loans.
+      // Skip them up-front to avoid wasted RPC calls; the empty-positions
+      const hasActiveLedger = (loans[i].account.ledgers as any[]).some(
+        (l: any) => l.status !== 0,
+      );
+      if (!hasActiveLedger) {
+        continue;
+      }
+
       const borrower = loans[i].account.borrower.toString();
       const positions = await orca.fetchPositionsForOwner(
         rpc.v2,
