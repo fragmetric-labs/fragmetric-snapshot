@@ -1,6 +1,6 @@
 {
   "name": "@fragmetric-labs/snapshot",
-  "version": "2.1.22",
+  "version": "2.1.23",
   "main": "dist/index.js",
   "bin": {
     "fragmetric-snapshot": "index.js"
@@ -42,6 +42,7 @@
     "commander": "^13.1.0",
     "decimal.js": "^10.5.0",
     "promise-retry": "^2.0.1",
+    "rpc-websockets": ">=9.1.0 <9.3.9",
     "winston": "^3.17.0"
   },
   "devDependencies": {
